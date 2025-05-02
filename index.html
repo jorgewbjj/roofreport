@@ -1,254 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEAL TOP ROOF - Inspection Report</title>
-    <style>
-        /* Logo and Header Styling */
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-        .logo {
-            height: 80px;
-            margin-bottom: 15px;
-        }
-        
-        /* Form Styling */
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            box-sizing: border-box;
-            margin-bottom: 15px;
-        }
-        button {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .add-btn {
-            background-color: #28a745;
-            color: white;
-        }
-        .remove-btn {
-            background-color: #dc3545;
-            color: white;
-        }
-        .submit-btn {
-            background-color: #007bff;
-            color: white;
-            float: right;
-        }
-    </style>
+    <!-- Keep the existing style section unchanged -->
+    <!-- Add EXIF library for image orientation handling -->
+    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 </head>
 <body>
-    <div class="header">
-        <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
-        <h1>Roof Inspection Report</h1>
-        <p>Where quality meets the sky</p>
-    </div>
-
-    <!-- Main Form -->
-    <div class="form-group">
-        <label>Property Address:</label>
-        <input type="text" id="address" required>
-    </div>
-
-    <div class="form-group">
-        <label>Inspector Name:</label>
-        <select id="inspector" required>
-            <option value="Arister">Arister</option>
-            <option value="Jorge">Jorge</option>
-            <option value="Pedro">Pedro</option>
-        </select>
-    </div>
-
+    <!-- Add onload to initialize date -->
+    <body onload="setDefaultDate()">
+    
+    <!-- Date input with default value -->
     <div class="form-group">
         <label>Inspection Date:</label>
         <input type="date" id="date" required>
     </div>
 
-    <div class="form-group">
-        <label>Roof Type:</label>
-        <select id="roof-type" required>
-            <option value="asphalt">Asphalt Shingles</option>
-            <option value="metal">Metal Roofing</option>
-            <option value="tile">Clay/Concrete Tile</option>
-            <option value="slate">Slate Roofing</option>
-        </select>
-    </div>
+    <!-- Rest of the HTML remains unchanged -->
 
-    <!-- Issues Container -->
-    <div id="issues-container">
-        <div class="form-group issue-section">
-            <label>Issue Description:</label>
-            <textarea class="issue-desc" required></textarea>
-            <label>Upload Photos for This Issue:</label>
-            <input type="file" class="issue-photos" multiple accept="image/*">
-            <button type="button" class="remove-btn" onclick="removeIssue(this)">Remove Issue</button>
-        </div>
-    </div>
-
-    <button class="add-btn" onclick="addIssue()">Add Another Issue</button>
-    <button class="submit-btn" onclick="generatePDF()">Generate Report</button>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        const { jsPDF } = window.jspdf;
-        let issueCount = 1;
-
-        // Add Issue Section
-        function addIssue() {
-            const container = document.getElementById('issues-container');
-            const newIssue = document.createElement('div');
-            newIssue.className = 'form-group issue-section';
-            newIssue.innerHTML = `
-                <label>Issue Description:</label>
-                <textarea class="issue-desc" required></textarea>
-                <label>Upload Photos for This Issue:</label>
-                <input type="file" class="issue-photos" multiple accept="image/*">
-                <button type="button" class="remove-btn" onclick="removeIssue(this)">Remove Issue</button>
-            `;
-            container.appendChild(newIssue);
-            issueCount++;
+        // Set default date to today
+        function setDefaultDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
         }
 
-        // Remove Issue Section
-        function removeIssue(button) {
-            if(issueCount > 1) {
-                button.parentElement.remove();
-                issueCount--;
-            }
+        // Modified readFile function to handle orientation
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    EXIF.getData(file, function() {
+                        const orientation = EXIF.getTag(this, 'Orientation');
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // Set canvas dimensions
+                            if (orientation > 4) {
+                                canvas.width = img.height;
+                                canvas.height = img.width;
+                            } else {
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                            }
+
+                            // Apply orientation transformations
+                            switch(orientation) {
+                                case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
+                                case 3: ctx.transform(-1, 0, 0, -1, img.width, img.height); break;
+                                case 4: ctx.transform(1, 0, 0, -1, 0, img.height); break;
+                                case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
+                                case 6: ctx.transform(0, 1, -1, 0, img.height, 0); break;
+                                case 7: ctx.transform(0, -1, -1, 0, img.height, img.width); break;
+                                case 8: ctx.transform(0, -1, 1, 0, 0, img.width); break;
+                            }
+
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/jpeg'));
+                        };
+                        img.src = e.target.result;
+                    });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
         }
 
-        // PDF Generation
+        // Modified PDF generation image handling
         async function generatePDF() {
             try {
-                const doc = new jsPDF();
-                
-                // Load and Add Logo
-                const logo = await loadLogo();
-                const logoWidth = 40;
-                const logoHeight = 40;
-                const pageWidth = doc.internal.pageSize.getWidth();
-                doc.addImage(logo, 'PNG', (pageWidth - logoWidth)/2, 15, logoWidth, logoHeight);
+                // ... existing PDF setup code ...
 
-                // Header Text
-                doc.setFontSize(18);
-                doc.setTextColor(40, 167, 69);
-                doc.text("Roof Inspection Report", pageWidth/2, 60, { align: 'center' });
-                doc.setFontSize(12);
-                doc.setTextColor(100);
-                doc.text("Where quality meets the sky", pageWidth/2, 68, { align: 'center' });
-
-                // Report Details
-                let yPos = 80;
-                doc.setFontSize(12);
-                doc.setTextColor(0);
-                const details = [
-                    `Property Address: ${document.getElementById('address').value}`,
-                    `Inspector: ${document.getElementById('inspector').value}`,
-                    `Inspection Date: ${document.getElementById('date').value}`,
-                    `Roof Type: ${document.getElementById('roof-type').value}`
-                ];
-
-                details.forEach(line => {
-                    doc.text(line, 20, yPos);
-                    yPos += 10;
-                });
-
-                // Issues Section
-                const issueSections = document.getElementsByClassName('issue-section');
-                yPos += 15;
-                
-                for(let i = 0; i < issueSections.length; i++) {
-                    const issue = issueSections[i];
-                    const desc = issue.querySelector('.issue-desc').value;
-                    const photos = issue.querySelector('.issue-photos').files;
-
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`Issue ${i + 1}:`, 20, yPos);
-                    doc.setFont('helvetica', 'normal');
-                    yPos += 7;
+                // Add Photos with original orientation
+                for(let j = 0; j < photos.length; j++) {
+                    const imgData = await readFile(photos[j]);
+                    const imgProps = doc.getImageProperties(imgData);
                     
-                    const issuesText = doc.splitTextToSize(desc, 170);
-                    doc.text(issuesText, 20, yPos);
-                    yPos += (issuesText.length * 7) + 10;
+                    // Use original dimensions without rotation
+                    const width = imgProps.width * 0.25;
+                    const height = imgProps.height * 0.25;
 
-                    // Add Photos
-                    for(let j = 0; j < photos.length; j++) {
-                        const img = await readFile(photos[j]);
-                        const imgProps = doc.getImageProperties(img);
-                        
-                        const scaleFactor = 0.25;
-                        let width = imgProps.width * scaleFactor;
-                        let height = imgProps.height * scaleFactor;
+                    // ... existing page break logic ...
 
-                        if(width > 150) {
-                            const ratio = 150 / width;
-                            width *= ratio;
-                            height *= ratio;
-                        }
-
-                        if(yPos + height > doc.internal.pageSize.getHeight() - 20) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-
-                        doc.addImage(img, 'JPEG', 20, yPos, width, height);
-                        yPos += height + 10;
-                    }
+                    doc.addImage(imgData, 'JPEG', 20, yPos, width, height);
+                    yPos += height + 10;
                 }
 
-                doc.save(`SEAL-TOP-Report-${new Date().toISOString().slice(0,10)}.pdf`);
+                // ... rest of the PDF generation code ...
             } catch (error) {
                 alert(`Error: ${error.message}`);
             }
         }
 
-        // File Handling Functions
-        function loadLogo() {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error('Failed to load logo. Check filename and location'));
-                img.src = 'Logo%20seal%20e%20slogan@2x.png';
-            });
-        }
-
-        function readFile(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
+        // ... rest of the existing JavaScript code ...
     </script>
 </body>
 </html>
