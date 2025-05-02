@@ -5,123 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roof Inspection Report</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        .report-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            height: 150px;
-        }
-        .location-btn {
-            background-color: #2196F3;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .submit-btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            float: right;
-        }
-        .error-message {
-            color: red;
-            margin-top: 5px;
-            font-size: 0.9em;
-        }
+        /* ... (keep all previous styles unchanged) ... */
     </style>
 </head>
 <body>
-    <div class="report-header">
-        <h1>Roof Inspection Report</h1>
-    </div>
-
-    <form id="reportForm">
-        <div class="form-group">
-            <label for="address">Property Address:</label>
-            <input type="text" id="address" name="address" required>
-            <button type="button" class="location-btn" onclick="getLocation()">Use My Location</button>
-        </div>
-
-        <div class="form-group">
-            <label for="inspector">Inspector Name:</label>
-            <select id="inspector" name="inspector" required>
-                <option value="">Select Inspector</option>
-                <option value="Arister">Arister</option>
-                <option value="Jorge">Jorge</option>
-                <option value="Pedro">Pedro</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="date">Inspection Date:</label>
-            <input type="date" id="date" name="date" required>
-        </div>
-
-        <div class="form-group">
-            <label for="roof-type">Roof Type:</label>
-            <select id="roof-type" name="roof-type" required>
-                <option value="">Select Roof Type</option>
-                <option value="asphalt">Asphalt Shingles</option>
-                <option value="metal">Metal</option>
-                <option value="tile">Tile</option>
-                <option value="slate">Slate</option>
-                <option value="wood">Wood Shakes</option>
-                <option value="flat">Flat Roof</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="issues">Issues Found:</label>
-            <textarea id="issues" name="issues" placeholder="Describe the issues found during inspection..." required></textarea>
-        </div>
-
-        <div class="form-group">
-            <label for="photos">Upload Photos:</label>
-            <input type="file" id="photos" name="photos" multiple accept="image/*">
-        </div>
-
-        <button type="button" class="submit-btn" onclick="generatePDF()">Generate Report</button>
-    </form>
+    <!-- ... (keep all HTML elements unchanged) ... -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         const { jsPDF } = window.jspdf;
 
-        // Geolocation functions
+        // Geolocation function
         function getLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     position => {
                         const addressField = document.getElementById('address');
-                        // For actual address, implement reverse geocoding here
                         addressField.value = `Lat: ${position.coords.latitude.toFixed(6)}, Long: ${position.coords.longitude.toFixed(6)}`;
                     },
                     error => {
@@ -136,8 +35,11 @@
         async function generatePDF() {
             try {
                 const doc = new jsPDF();
-                doc.setFont('helvetica');
                 
+                // Set default font style
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(12);
+
                 // Get form data
                 const formData = {
                     address: document.getElementById('address').value,
@@ -148,11 +50,11 @@
                     photos: document.getElementById('photos').files
                 };
 
-                // Create PDF content
+                // Create PDF header
                 doc.setFontSize(18);
                 doc.text("Roof Inspection Report", 20, 20);
-                
-                // Add report details
+
+                // Report details
                 let yPos = 40;
                 doc.setFontSize(12);
                 doc.text(`Address: ${formData.address}`, 20, yPos);
@@ -164,7 +66,7 @@
                 doc.text(`Roof Type: ${formData.roofType}`, 20, yPos);
                 yPos += 15;
 
-                // Add issues
+                // Issues section
                 doc.setFont('helvetica', 'bold');
                 doc.text("Issues Found:", 20, yPos);
                 doc.setFont('helvetica', 'normal');
@@ -173,7 +75,7 @@
                 doc.text(splitText, 20, yPos);
                 yPos += (splitText.length * 7) + 10;
 
-                // Add photos
+                // Photo handling
                 if(formData.photos.length > 0) {
                     doc.setFont('helvetica', 'bold');
                     doc.text("Attached Photos:", 20, yPos);
