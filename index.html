@@ -66,7 +66,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="setDefaultDate()">
     <div class="header">
         <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
         <h1>Roof Inspection Report</h1>
@@ -119,6 +119,15 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
+        // Set default date to today
+        function setDefaultDate() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+        }
+
         const { jsPDF } = window.jspdf;
         let issueCount = 1;
 
