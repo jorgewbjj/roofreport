@@ -1,23 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Keep the existing style section unchanged -->
-    <!-- Add EXIF library for image orientation handling -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEAL TOP ROOF - Inspection Report</title>
+    <style>
+        /* ... (keep all existing styles unchanged) ... */
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 </head>
-<body>
-    <!-- Add onload to initialize date -->
-    <body onload="setDefaultDate()">
-    
-    <!-- Date input with default value -->
-    <div class="form-group">
-        <label>Inspection Date:</label>
-        <input type="date" id="date" required>
+<body onload="setDefaultDate()">
+    <div class="header">
+        <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
+        <h1>Roof Inspection Report</h1>
+        <p>Where quality meets the sky</p>
     </div>
 
-    <!-- Rest of the HTML remains unchanged -->
+    <!-- Main Form (keep all form elements unchanged) -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
+        const { jsPDF } = window.jspdf;
+        let issueCount = 1;
+
         // Set default date to today
         function setDefaultDate() {
             const today = new Date();
@@ -27,18 +32,126 @@
             document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
         }
 
-        // Modified readFile function to handle orientation
+        // ... (keep addIssue() and removeIssue() functions unchanged) ...
+
+        async function generatePDF() {
+            try {
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                let yPos = 0;
+
+                try {
+                    const logo = await loadLogo();
+                    doc.addImage(logo, 'PNG', (pageWidth-40)/2, 15, 40, 40);
+                    yPos = 70;
+                } catch {
+                    yPos = 20;
+                    console.log('Proceeding without logo');
+                }
+
+                // Header
+                doc.setFontSize(18);
+                doc.setTextColor(40, 167, 69);
+                doc.text("Roof Inspection Report", pageWidth/2, yPos, { align: 'center' });
+                doc.setFontSize(12);
+                doc.setTextColor(100);
+                doc.text("Where quality meets the sky", pageWidth/2, yPos + 8, { align: 'center' });
+                yPos += 30;
+
+                // Property Details
+                doc.setFontSize(12);
+                doc.setTextColor(0);
+                const details = [
+                    `Property Address: ${document.getElementById('address').value}`,
+                    `Inspector: ${document.getElementById('inspector').value}`,
+                    `Inspection Date: ${document.getElementById('date').value}`,
+                    `Roof Type: ${document.getElementById('roof-type').value}`
+                ];
+
+                details.forEach(line => {
+                    if(yPos > 280) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.text(line, 20, yPos);
+                    yPos += 10;
+                });
+
+                yPos += 15;
+
+                // Issues Section
+                const issueSections = document.getElementsByClassName('issue-section');
+                for(let i = 0; i < issueSections.length; i++) {
+                    const issue = issueSections[i];
+                    const desc = issue.querySelector('.issue-desc').value;
+                    const photos = issue.querySelector('.issue-photos').files;
+
+                    // Issue Header
+                    if(yPos > 250) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Issue #${i+1}:`, 20, yPos);
+                    yPos += 7;
+
+                    // Issue Description
+                    doc.setFont('helvetica', 'normal');
+                    const issuesText = doc.splitTextToSize(desc, 170);
+                    issuesText.forEach(line => {
+                        if(yPos > 280) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        doc.text(line, 20, yPos);
+                        yPos += 7;
+                    });
+                    yPos += 10;
+
+                    // Photos
+                    for(let j = 0; j < photos.length; j++) {
+                        try {
+                            const imgData = await readFile(photos[j]);
+                            const imgProps = doc.getImageProperties(imgData);
+                            
+                            // Maintain original aspect ratio at 25% scale
+                            const scale = 0.25;
+                            let width = imgProps.width * scale;
+                            let height = imgProps.height * scale;
+
+                            // Check page space
+                            if(yPos + height > 280) {
+                                doc.addPage();
+                                yPos = 20;
+                            }
+
+                            doc.addImage(imgData, 'JPEG', 20, yPos, width, height);
+                            yPos += height + 10;
+                        } catch(error) {
+                            console.error('Error processing image:', error);
+                        }
+                    }
+                    yPos += 15;
+                }
+
+                doc.save(`SEAL-TOP-Report-${new Date().toISOString().slice(0,10)}.pdf`);
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Image orientation correction
         function readFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     EXIF.getData(file, function() {
-                        const orientation = EXIF.getTag(this, 'Orientation');
+                        const orientation = EXIF.getTag(this, 'Orientation') || 1;
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
-                            
+
                             // Set canvas dimensions
                             if (orientation > 4) {
                                 canvas.width = img.height;
@@ -48,7 +161,7 @@
                                 canvas.height = img.height;
                             }
 
-                            // Apply orientation transformations
+                            // Apply transformations
                             switch(orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
                                 case 3: ctx.transform(-1, 0, 0, -1, img.width, img.height); break;
@@ -70,33 +183,14 @@
             });
         }
 
-        // Modified PDF generation image handling
-        async function generatePDF() {
-            try {
-                // ... existing PDF setup code ...
-
-                // Add Photos with original orientation
-                for(let j = 0; j < photos.length; j++) {
-                    const imgData = await readFile(photos[j]);
-                    const imgProps = doc.getImageProperties(imgData);
-                    
-                    // Use original dimensions without rotation
-                    const width = imgProps.width * 0.25;
-                    const height = imgProps.height * 0.25;
-
-                    // ... existing page break logic ...
-
-                    doc.addImage(imgData, 'JPEG', 20, yPos, width, height);
-                    yPos += height + 10;
-                }
-
-                // ... rest of the PDF generation code ...
-            } catch (error) {
-                alert(`Error: ${error.message}`);
-            }
+        function loadLogo() {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject();
+                img.src = 'Logo%20seal%20e%20slogan@2x.png';
+            });
         }
-
-        // ... rest of the existing JavaScript code ...
     </script>
 </body>
 </html>
