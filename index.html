@@ -3,113 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roof Inspection Report</title>
+    <title>Roof Inspection Report Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 20px auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
-        .report-header {
-            text-align: center;
-            margin-bottom: 30px;
+        .form-container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: bold;
+            color: #333;
         }
         input, select, textarea {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea {
-            height: 150px;
-        }
-        .location-btn {
-            background-color: #2196F3;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-        .submit-btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            float: right;
-        }
-        .error-message {
-            color: red;
-            margin-top: 5px;
-            font-size: 0.9em;
-        }
-        .photo-preview {
-            margin: 15px 0;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        .submit-btn {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+        #photoPreviews {
+            margin-top: 15px;
+        }
+        .photo-preview {
+            display: inline-block;
+            margin: 5px;
+            position: relative;
         }
         .photo-preview img {
-            max-width: 200px;
-            max-height: 150px;
-            margin-bottom: 5px;
-        }
-        .photo-comment {
-            width: 100%;
-            padding: 5px;
-            margin-top: 5px;
+            max-width: 150px;
+            max-height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 3px;
         }
     </style>
 </head>
 <body>
-    <div class="report-header">
-        <h1>Roof Inspection Report</h1>
-    </div>
+    <div class="form-container">
+        <h1 style="color: #2c3e50; text-align: center; margin-bottom: 25px;">Roof Inspection Report</h1>
 
-    <form id="reportForm">
-        <!-- Keep previous form elements -->
-        
         <div class="form-group">
-            <label for="photos">Upload Photos:</label>
-            <input type="file" id="photos" name="photos" multiple accept="image/*">
+            <label for="address">Property Address:</label>
+            <input type="text" id="address" required>
+        </div>
+
+        <div class="form-group">
+            <label for="inspector">Inspector Name:</label>
+            <select id="inspector" required>
+                <option value="">Select Inspector</option>
+                <option value="Arister">Arister</option>
+                <option value="Jorge">Jorge</option>
+                <option value="Pedro">Pedro</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="date">Inspection Date:</label>
+            <input type="date" id="date" required>
+        </div>
+
+        <div class="form-group">
+            <label for="roof-type">Roof Type:</label>
+            <select id="roof-type" required>
+                <option value="">Select Roof Type</option>
+                <option value="asphalt">Asphalt Shingles</option>
+                <option value="metal">Metal Roofing</option>
+                <option value="tile">Clay/Concrete Tile</option>
+                <option value="slate">Slate Roofing</option>
+                <option value="wood">Wood Shake</option>
+                <option value="flat">Flat Roof</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="issues">Issues Found:</label>
+            <textarea id="issues" placeholder="Describe all issues found during inspection..." required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="photos">Upload Photos (Max 5):</label>
+            <input type="file" id="photos" accept="image/*" multiple>
             <div id="photoPreviews"></div>
         </div>
 
-        <button type="button" class="submit-btn" onclick="generatePDF()">Generate Report</button>
-    </form>
+        <button class="submit-btn" onclick="generatePDF()">Generate PDF Report</button>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        const OPENCAGE_API_KEY = 'YOUR_API_KEY_HERE';
         const { jsPDF } = window.jspdf;
 
-        // Add photo preview and comment input
+        // Image preview handler
         document.getElementById('photos').addEventListener('change', function(e) {
             const previewContainer = document.getElementById('photoPreviews');
             previewContainer.innerHTML = '';
             
-            Array.from(e.target.files).forEach((file, index) => {
+            Array.from(e.target.files).slice(0, 5).forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const div = document.createElement('div');
                     div.className = 'photo-preview';
                     div.innerHTML = `
-                        <img src="${e.target.result}" alt="Photo ${index + 1}">
-                        <input type="text" class="photo-comment" 
-                               placeholder="Enter comment for photo ${index + 1}">
+                        <img src="${e.target.result}" alt="Preview ${index + 1}">
                     `;
                     previewContainer.appendChild(div);
                 };
@@ -117,58 +143,94 @@
             });
         });
 
+        // PDF Generation Function
         async function generatePDF() {
             try {
                 const doc = new jsPDF();
+                
+                // Set default styles
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(12);
 
-                // Get photo comments
-                const photoComments = Array.from(document.querySelectorAll('.photo-comment'))
-                    .map(input => input.value);
+                // Header Section
+                doc.setFontSize(18);
+                doc.setTextColor(40, 167, 69);
+                doc.text("Roof Inspection Report", 20, 20);
+                doc.setFontSize(12);
+                doc.setTextColor(0);
 
-                // ... (keep previous form data collection) ...
+                // Report Details
+                let yPos = 40;
+                const details = [
+                    `Property Address: ${document.getElementById('address').value}`,
+                    `Inspector: ${document.getElementById('inspector').value}`,
+                    `Inspection Date: ${document.getElementById('date').value}`,
+                    `Roof Type: ${document.getElementById('roof-type').value}`
+                ];
 
-                // Add photos with comments
-                if(formData.photos.length > 0) {
-                    doc.setFont('helvetica', 'bold');
-                    doc.text("Attached Photos:", 20, yPos);
-                    doc.setFont('helvetica', 'normal');
+                details.forEach(line => {
+                    doc.text(line, 20, yPos);
                     yPos += 10;
+                });
 
-                    for(let i = 0; i < formData.photos.length; i++) {
-                        const img = await readFileAsDataURL(formData.photos[i]);
-                        const imgProps = doc.getImageProperties(img);
-                        
-                        // Smaller image size (60% of page width)
-                        const pdfWidth = doc.internal.pageSize.getWidth() * 0.6;
-                        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                // Issues Section
+                yPos += 10;
+                doc.setFont('helvetica', 'bold');
+                doc.text("Issues Found:", 20, yPos);
+                doc.setFont('helvetica', 'normal');
+                yPos += 7;
+                const issuesText = doc.splitTextToSize(document.getElementById('issues').value, 170);
+                doc.text(issuesText, 20, yPos);
+                yPos += (issuesText.length * 7) + 15;
 
-                        if(yPos + pdfHeight > doc.internal.pageSize.getHeight() - 20) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
+                // Photo Handling
+                const files = document.getElementById('photos').files;
+                for(let i = 0; i < Math.min(files.length, 5); i++) {
+                    const img = await readFile(files[i]);
+                    const imgProps = doc.getImageProperties(img);
+                    
+                    // Set image to 25% of original size
+                    const scaleFactor = 0.25;
+                    let width = imgProps.width * scaleFactor;
+                    let height = imgProps.height * scaleFactor;
 
-                        // Add image
-                        doc.addImage(img, 'JPEG', 20, yPos, pdfWidth, pdfHeight);
-                        yPos += pdfHeight + 5;
-
-                        // Add comment
-                        doc.setFontSize(10);
-                        const comment = photoComments[i] || 'No comment provided';
-                        const splitComment = doc.splitTextToSize(`Comment: ${comment}`, 170);
-                        doc.text(splitComment, 20, yPos);
-                        yPos += (splitComment.length * 4) + 10;
+                    // Ensure image fits page width
+                    const maxWidth = doc.internal.pageSize.getWidth() - 40;
+                    if(width > maxWidth) {
+                        const ratio = maxWidth / width;
+                        width *= ratio;
+                        height *= ratio;
                     }
+
+                    // Page break check
+                    if(yPos + height > doc.internal.pageSize.getHeight() - 20) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    // Add image to PDF
+                    doc.addImage(img, 'JPEG', 20, yPos, width, height);
+                    yPos += height + 10;
                 }
 
-                doc.save(`Roof-Inspection-Report-${Date.now()}.pdf`);
+                // Save PDF
+                const reportDate = new Date().toISOString().slice(0,10);
+                doc.save(`Roof_Report_${reportDate}.pdf`);
+                
             } catch (error) {
                 alert(`Error generating PDF: ${error.message}`);
             }
         }
 
-        // Keep previous geolocation and helper functions
+        // File reader helper
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
     </script>
 </body>
 </html>
