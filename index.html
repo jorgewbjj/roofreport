@@ -33,6 +33,15 @@
         textarea {
             height: 150px;
         }
+        .location-btn {
+            background-color: #2196F3;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
         .submit-btn {
             background-color: #4CAF50;
             color: white;
@@ -45,6 +54,9 @@
         .submit-btn:hover {
             background-color: #45a049;
         }
+        .location-btn:hover {
+            background-color: #0b7dda;
+        }
     </style>
 </head>
 <body>
@@ -52,15 +64,21 @@
         <h1>Roof Inspection Report</h1>
     </div>
 
-    <form>
+    <form id="reportForm" enctype="multipart/form-data">
         <div class="form-group">
             <label for="address">Property Address:</label>
             <input type="text" id="address" name="address" required>
+            <button type="button" class="location-btn" onclick="getLocation()">Use My Location</button>
         </div>
 
         <div class="form-group">
             <label for="inspector">Inspector Name:</label>
-            <input type="text" id="inspector" name="inspector" required>
+            <select id="inspector" name="inspector" required>
+                <option value="">Select Inspector</option>
+                <option value="Arister">Arister</option>
+                <option value="Jorge">Jorge</option>
+                <option value="Pedro">Pedro</option>
+            </select>
         </div>
 
         <div class="form-group">
@@ -86,7 +104,35 @@
             <textarea id="issues" name="issues" placeholder="Describe the issues found during inspection..." required></textarea>
         </div>
 
+        <div class="form-group">
+            <label for="photos">Upload Photos:</label>
+            <input type="file" id="photos" name="photos" multiple accept="image/*">
+        </div>
+
         <button type="submit" class="submit-btn">Generate Report</button>
     </form>
+
+    <script>
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position) {
+            // You would need to implement reverse geocoding here
+            // This is just a placeholder example
+            const addressField = document.getElementById('address');
+            addressField.value = `Lat: ${position.coords.latitude}, Long: ${position.coords.longitude}`;
+            
+            // For actual address, you'd need to use a geocoding service
+            // Example with OpenCage Geocoder API (requires API key):
+            // fetch(`https://api.opencagedata.com/geocode/v1/json?q=${position.coords.latitude}+${position.coords.longitude}&key=YOUR_API_KEY`)
+            // .then(response => response.json())
+            // .then(data => addressField.value = data.results[0].formatted);
+        }
+    </script>
 </body>
 </html>
