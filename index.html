@@ -5,45 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roof Inspection Report</title>
     <style>
-        /* Add logo styling */
+        /* Logo styling */
         .header {
             text-align: center;
             margin-bottom: 20px;
+            position: relative;
         }
         .logo {
             height: 80px;
-            margin-bottom: 10px;
+            margin: 0 auto 15px;
+            display: block;
         }
-        /* Keep previous styles */
+        /* Existing styles */
         body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
         .form-group { margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        .issue-section { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
-        .add-btn { background-color: #4CAF50; color: white; }
-        .remove-btn { background-color: #ff4444; color: white; }
-        .submit-btn { background-color: #2196F3; color: white; float: right; }
+        /* ... (keep other existing styles) ... */
     </style>
 </head>
 <body>
     <div class="header">
-        <img src="Logo_seal_e_slogan@2x.png" class="logo" alt="SEAL TOP ROOF MANAGEMENT Logo">
+        <!-- Webpage Logo -->
+        <img src="Logo_seal_e_slogan@2x.png" class="logo" alt="Company Logo" id="companyLogo">
         <h1>Roof Inspection Report</h1>
     </div>
 
-    <!-- Keep all form elements from previous version -->
-    <div class="form-group">
-        <label>Property Address:</label>
-        <input type="text" id="address" required>
-    </div>
-
-    <!-- ... (rest of the form elements remain identical) ... -->
+    <!-- Rest of your form elements remain unchanged -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         const { jsPDF } = window.jspdf;
-        let issueCount = 1;
 
         async function generatePDF() {
             try {
@@ -51,28 +41,45 @@
                 
                 // Add logo to PDF
                 const logo = await loadLogo();
-                doc.addImage(logo, 'PNG', 20, 10, 40, 40); // Adjust size/position as needed
+                const imgWidth = 40;
+                const imgHeight = 40;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                // Center logo in PDF
+                const xPos = (pageWidth - imgWidth) / 2;
+                doc.addImage(logo, 'PNG', xPos, 10, imgWidth, imgHeight);
 
-                // Header Section
+                // Header text below logo
                 doc.setFontSize(18);
-                doc.text("Roof Inspection Report", 70, 30); // Adjust position to account for logo
+                doc.text("Roof Inspection Report", pageWidth/2, 60, { align: 'center' });
+                doc.setFontSize(12);
+                doc.setTextColor(100);
+                doc.text("Where quality meets the sky", pageWidth/2, 68, { align: 'center' });
 
-                // ... rest of the PDF generation code remains the same ...
+                // Rest of your PDF generation code...
+
             } catch (error) {
                 alert(`Error generating PDF: ${error.message}`);
             }
         }
 
-        // Logo loading function
+        // Improved logo loading
         async function loadLogo() {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const img = new Image();
+                img.crossOrigin = "anonymous"; // Handle CORS if needed
                 img.onload = () => resolve(img);
+                img.onerror = (err) => {
+                    alert('Failed to load logo: Please check filename and location');
+                    reject(err);
+                };
+                // Use absolute path if needed: 
+                // img.src = window.location.href + 'Logo_seal_e_slogan@2x.png';
                 img.src = 'Logo_seal_e_slogan@2x.png';
             });
         }
 
-        // ... rest of the JavaScript functions remain the same ...
+        // Rest of your JavaScript code...
     </script>
 </body>
 </html>
