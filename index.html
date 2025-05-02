@@ -3,83 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roof Inspection Report</title>
+    <title>SEAL TOP ROOF - Inspection Report</title>
     <style>
-        /* Logo styling */
+        /* Logo and Header Styling */
         .header {
             text-align: center;
             margin-bottom: 20px;
-            position: relative;
+            padding: 20px;
+            background: #f8f9fa;
         }
         .logo {
             height: 80px;
-            margin: 0 auto 15px;
-            display: block;
+            margin-bottom: 15px;
         }
-        /* Existing styles */
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
-        .form-group { margin-bottom: 15px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
-        /* ... (keep other existing styles) ... */
+        
+        /* Form Styling */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .add-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .remove-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            float: right;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <!-- Webpage Logo -->
-        <img src="Logo_seal_e_slogan@2x.png" class="logo" alt="Company Logo" id="companyLogo">
+        <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
         <h1>Roof Inspection Report</h1>
+        <p>Where quality meets the sky</p>
     </div>
 
-    <!-- Rest of your form elements remain unchanged -->
+    <!-- Main Form -->
+    <div class="form-group">
+        <label>Property Address:</label>
+        <input type="text" id="address" required>
+    </div>
+
+    <div class="form-group">
+        <label>Inspector Name:</label>
+        <select id="inspector" required>
+            <option value="Arister">Arister</option>
+            <option value="Jorge">Jorge</option>
+            <option value="Pedro">Pedro</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Inspection Date:</label>
+        <input type="date" id="date" required>
+    </div>
+
+    <div class="form-group">
+        <label>Roof Type:</label>
+        <select id="roof-type" required>
+            <option value="asphalt">Asphalt Shingles</option>
+            <option value="metal">Metal Roofing</option>
+            <option value="tile">Clay/Concrete Tile</option>
+            <option value="slate">Slate Roofing</option>
+        </select>
+    </div>
+
+    <!-- Issues Container -->
+    <div id="issues-container">
+        <div class="form-group issue-section">
+            <label>Issue Description:</label>
+            <textarea class="issue-desc" required></textarea>
+            <label>Upload Photos for This Issue:</label>
+            <input type="file" class="issue-photos" multiple accept="image/*">
+            <button type="button" class="remove-btn" onclick="removeIssue(this)">Remove Issue</button>
+        </div>
+    </div>
+
+    <button class="add-btn" onclick="addIssue()">Add Another Issue</button>
+    <button class="submit-btn" onclick="generatePDF()">Generate Report</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         const { jsPDF } = window.jspdf;
+        let issueCount = 1;
 
+        // Add Issue Section
+        function addIssue() {
+            const container = document.getElementById('issues-container');
+            const newIssue = document.createElement('div');
+            newIssue.className = 'form-group issue-section';
+            newIssue.innerHTML = `
+                <label>Issue Description:</label>
+                <textarea class="issue-desc" required></textarea>
+                <label>Upload Photos for This Issue:</label>
+                <input type="file" class="issue-photos" multiple accept="image/*">
+                <button type="button" class="remove-btn" onclick="removeIssue(this)">Remove Issue</button>
+            `;
+            container.appendChild(newIssue);
+            issueCount++;
+        }
+
+        // Remove Issue Section
+        function removeIssue(button) {
+            if(issueCount > 1) {
+                button.parentElement.remove();
+                issueCount--;
+            }
+        }
+
+        // PDF Generation
         async function generatePDF() {
             try {
                 const doc = new jsPDF();
                 
-                // Add logo to PDF
+                // Load and Add Logo
                 const logo = await loadLogo();
-                const imgWidth = 40;
-                const imgHeight = 40;
+                const logoWidth = 40;
+                const logoHeight = 40;
                 const pageWidth = doc.internal.pageSize.getWidth();
-                
-                // Center logo in PDF
-                const xPos = (pageWidth - imgWidth) / 2;
-                doc.addImage(logo, 'PNG', xPos, 10, imgWidth, imgHeight);
+                doc.addImage(logo, 'PNG', (pageWidth - logoWidth)/2, 15, logoWidth, logoHeight);
 
-                // Header text below logo
+                // Header Text
                 doc.setFontSize(18);
+                doc.setTextColor(40, 167, 69);
                 doc.text("Roof Inspection Report", pageWidth/2, 60, { align: 'center' });
                 doc.setFontSize(12);
                 doc.setTextColor(100);
                 doc.text("Where quality meets the sky", pageWidth/2, 68, { align: 'center' });
 
-                // Rest of your PDF generation code...
+                // Report Details
+                let yPos = 80;
+                doc.setFontSize(12);
+                doc.setTextColor(0);
+                const details = [
+                    `Property Address: ${document.getElementById('address').value}`,
+                    `Inspector: ${document.getElementById('inspector').value}`,
+                    `Inspection Date: ${document.getElementById('date').value}`,
+                    `Roof Type: ${document.getElementById('roof-type').value}`
+                ];
 
+                details.forEach(line => {
+                    doc.text(line, 20, yPos);
+                    yPos += 10;
+                });
+
+                // Issues Section
+                const issueSections = document.getElementsByClassName('issue-section');
+                yPos += 15;
+                
+                for(let i = 0; i < issueSections.length; i++) {
+                    const issue = issueSections[i];
+                    const desc = issue.querySelector('.issue-desc').value;
+                    const photos = issue.querySelector('.issue-photos').files;
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Issue ${i + 1}:`, 20, yPos);
+                    doc.setFont('helvetica', 'normal');
+                    yPos += 7;
+                    
+                    const issuesText = doc.splitTextToSize(desc, 170);
+                    doc.text(issuesText, 20, yPos);
+                    yPos += (issuesText.length * 7) + 10;
+
+                    // Add Photos
+                    for(let j = 0; j < photos.length; j++) {
+                        const img = await readFile(photos[j]);
+                        const imgProps = doc.getImageProperties(img);
+                        
+                        const scaleFactor = 0.25;
+                        let width = imgProps.width * scaleFactor;
+                        let height = imgProps.height * scaleFactor;
+
+                        if(width > 150) {
+                            const ratio = 150 / width;
+                            width *= ratio;
+                            height *= ratio;
+                        }
+
+                        if(yPos + height > doc.internal.pageSize.getHeight() - 20) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+
+                        doc.addImage(img, 'JPEG', 20, yPos, width, height);
+                        yPos += height + 10;
+                    }
+                }
+
+                doc.save(`SEAL-TOP-Report-${new Date().toISOString().slice(0,10)}.pdf`);
             } catch (error) {
-                alert(`Error generating PDF: ${error.message}`);
+                alert(`Error: ${error.message}`);
             }
         }
 
-        // Improved logo loading
-        async function loadLogo() {
+        // File Handling Functions
+        function loadLogo() {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.crossOrigin = "anonymous"; // Handle CORS if needed
                 img.onload = () => resolve(img);
-                img.onerror = (err) => {
-                    alert('Failed to load logo: Please check filename and location');
-                    reject(err);
-                };
-                // Use absolute path if needed: 
-                // img.src = window.location.href + 'Logo_seal_e_slogan@2x.png';
-                img.src = 'Logo_seal_e_slogan@2x.png';
+                img.onerror = () => reject(new Error('Failed to load logo. Check filename and location'));
+                img.src = 'Logo%20seal%20e%20slogan@2x.png';
             });
         }
 
-        // Rest of your JavaScript code...
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
     </script>
 </body>
 </html>
