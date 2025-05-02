@@ -140,7 +140,7 @@
                         const img = await readFileAsDataURL(formData.photos[i]);
                         const imgProps = doc.getImageProperties(img);
                         
-                        // Smaller image size (30% of page width)
+                        // Smaller image size (60% of page width)
                         const pdfWidth = doc.internal.pageSize.getWidth() * 0.6;
                         const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
