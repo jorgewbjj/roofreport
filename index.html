@@ -83,9 +83,9 @@
     <div class="form-group">
         <label>Inspector Name:</label>
         <select id="inspector" required>
-            <option value="Arister">Arister</option>
-            <option value="Jorge">Jorge</option>
-            <option value="Pedro">Pedro</option>
+            <option value="Arister Cruz">Arister Cruz</option>
+            <option value="Jorge Woicikoski">Jorge Woicikoski</option>
+            <option value="Pedro Ortiz">Pedro Ortiz</option>
         </select>
     </div>
 
@@ -168,10 +168,11 @@
                 // Add Logo
                 try {
                     const logo = await loadLogo();
-                    const logoWidth = 50;
-                    const logoHeight = 50;
-                    doc.addImage(logo, 'PNG', (pageWidth - logoWidth)/2, 15, logoWidth, logoHeight);
-                    yPos = 75;
+                    const desiredWidth = 80;
+                    const aspectRatio = logo.naturalHeight / logo.naturalWidth;
+                    const logoHeight = desiredWidth * aspectRatio;
+                    doc.addImage(logo, 'PNG', 20, 15, desiredWidth, logoHeight);
+                    yPos = 15 + logoHeight + 10;
                 } catch {
                     yPos = 20;
                 }
