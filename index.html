@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roof Inspection Report</title>
     <style>
-        /* Keep previous styles */
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
@@ -65,7 +64,6 @@
     </div>
 
     <form id="reportForm">
-        <!-- Keep all form elements from previous version -->
         <div class="form-group">
             <label for="address">Property Address:</label>
             <input type="text" id="address" name="address" required>
@@ -113,19 +111,34 @@
         <button type="button" class="submit-btn" onclick="generatePDF()">Generate Report</button>
     </form>
 
-    <!-- Load jsPDF at the end -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        // Initialize jsPDF
         const { jsPDF } = window.jspdf;
 
-        // Keep previous geolocation functions
+        // Geolocation functions
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const addressField = document.getElementById('address');
+                        // For actual address, implement reverse geocoding here
+                        addressField.value = `Lat: ${position.coords.latitude.toFixed(6)}, Long: ${position.coords.longitude.toFixed(6)}`;
+                    },
+                    error => {
+                        alert(`Error getting location: ${error.message}`);
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
 
         async function generatePDF() {
             try {
                 const doc = new jsPDF();
+                doc.setFont('helvetica');
                 
-                // Collect form data
+                // Get form data
                 const formData = {
                     address: document.getElementById('address').value,
                     inspector: document.getElementById('inspector').value,
@@ -139,7 +152,7 @@
                 doc.setFontSize(18);
                 doc.text("Roof Inspection Report", 20, 20);
                 
-                // Add form data
+                // Add report details
                 let yPos = 40;
                 doc.setFontSize(12);
                 doc.text(`Address: ${formData.address}`, 20, yPos);
@@ -152,18 +165,19 @@
                 yPos += 15;
 
                 // Add issues
-                doc.setFontStyle('bold');
+                doc.setFont('helvetica', 'bold');
                 doc.text("Issues Found:", 20, yPos);
-                doc.setFontStyle('normal');
+                doc.setFont('helvetica', 'normal');
                 yPos += 7;
                 const splitText = doc.splitTextToSize(formData.issues, 170);
                 doc.text(splitText, 20, yPos);
-                yPos += splitText.length * 7 + 10;
+                yPos += (splitText.length * 7) + 10;
 
-                // Add images
+                // Add photos
                 if(formData.photos.length > 0) {
-                    doc.setFontStyle('bold');
+                    doc.setFont('helvetica', 'bold');
                     doc.text("Attached Photos:", 20, yPos);
+                    doc.setFont('helvetica', 'normal');
                     yPos += 10;
 
                     for(let i = 0; i < formData.photos.length; i++) {
@@ -183,7 +197,7 @@
                 }
 
                 // Save PDF
-                doc.save(`Roof-Report-${Date.now()}.pdf`);
+                doc.save(`Roof-Inspection-Report-${Date.now()}.pdf`);
             } catch (error) {
                 alert(`Error generating PDF: ${error.message}`);
                 console.error(error);
@@ -198,8 +212,6 @@
                 reader.readAsDataURL(file);
             });
         }
-
-        // Geolocation functions from previous answer
     </script>
 </body>
 </html>
