@@ -157,7 +157,7 @@
 
     <div class="top-details">
         <div class="form-group">
-            <label>Property Address:</label>
+            <label>Property:</label>
             <input type="text" id="address" required>
         </div>
 
@@ -276,10 +276,16 @@
 
                 doc.setFontSize(12);
                 doc.setTextColor(0);
+                
+                // Format date to mm/dd/yyyy
+                const rawDate = document.getElementById('date').value;
+                const [year, month, day] = rawDate.split('-');
+                const formattedDate = `${month}/${day}/${year}`;
+
                 const details = [
-                    `Property Address: ${document.getElementById('address').value}`,
+                    `Property: ${document.getElementById('address').value}`,
                     `Inspector: ${document.getElementById('inspector').value}`,
-                    `Inspection Date: ${document.getElementById('date').value}`,
+                    `Inspection Date: ${formattedDate}`,
                     `Roof Type: ${document.getElementById('roof-type').value}`,
                     `Roof Condition: ${document.getElementById('roof-condition').value}`
                 ];
@@ -315,7 +321,7 @@
 
                     // Calculate required space
                     const splitText = doc.splitTextToSize(desc, pageWidth - 40);
-                    const textHeight = splitText.length * 6 + 10; // Reduced spacing
+                    const textHeight = splitText.length * 6 + 10;
                     const imagesHeight = images.reduce((sum, img) => sum + img.height + 5, 0);
                     const totalHeight = textHeight + imagesHeight;
 
