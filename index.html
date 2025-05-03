@@ -154,13 +154,11 @@
         <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
         <h1>Roof Inspection Report</h1>
     </div>
-
     <div class="top-details">
         <div class="form-group">
             <label>Property Address:</label>
             <input type="text" id="address" required>
         </div>
-
         <div class="form-group">
             <label>Inspector Name:</label>
             <select id="inspector" required>
@@ -169,7 +167,6 @@
                 <option value="Pedro Ortiz">Pedro Ortiz</option>
             </select>
         </div>
-
         <div class="form-group">
             <label>Roof Type:</label>
             <select id="roof-type" required>
@@ -181,7 +178,6 @@
                 <option value="Other">Other</option>
             </select>
         </div>
-
         <div class="form-group">
             <label>Roof Condition:</label>
             <select id="roof-condition" required>
@@ -191,12 +187,10 @@
             </select>
         </div>
     </div>
-
     <div class="form-group">
         <label>Inspection Date:</label>
         <input type="date" id="date" required>
     </div>
-
     <div id="observations-container">
         <div class="form-group observation-section">
             <label>Observation Description:</label>
@@ -208,12 +202,10 @@
             </div>
         </div>
     </div>
-
     <div class="button-group">
         <button class="add-btn" onclick="addObservation()">Add Observation</button>
         <button class="submit-btn" onclick="generatePDF()">Generate Report</button>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
         function setDefaultDate() {
@@ -223,10 +215,8 @@
             const dd = String(today.getDate()).padStart(2, '0');
             document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
         }
-
         const { jsPDF } = window.jspdf;
         let observationCount = 1;
-
         function addObservation() {
             const container = document.getElementById('observations-container');
             const newObservation = document.createElement('div');
