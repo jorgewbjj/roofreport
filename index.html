@@ -1,13 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Previous head content remains the same -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SEAL TOP ROOF - Inspection Report</title>
     <style>
-        /* Previous styles remain unchanged */
-        /* Logo and Header Styling */
         .header {
             text-align: center;
             margin-bottom: 20px;
@@ -18,8 +15,6 @@
             height: 80px;
             margin-bottom: 15px;
         }
-        
-        /* Form Styling */
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
@@ -70,7 +65,6 @@
     <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
 </head>
 <body onload="setDefaultDate()">
-    <!-- Body content remains unchanged -->
     <div class="header">
         <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
         <h1>Roof Inspection Report</h1>
@@ -125,8 +119,6 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
-        // Previous JavaScript remains unchanged until generatePDF function
-        // Set default date to today
         function setDefaultDate() {
             const today = new Date();
             const yyyy = today.getFullYear();
@@ -138,7 +130,6 @@
         const { jsPDF } = window.jspdf;
         let issueCount = 1;
 
-        // Add Issue Section
         function addIssue() {
             const container = document.getElementById('issues-container');
             const newIssue = document.createElement('div');
@@ -154,7 +145,6 @@
             issueCount++;
         }
 
-        // Remove Issue Section
         function removeIssue(button) {
             if(issueCount > 1) {
                 button.parentElement.remove();
@@ -162,7 +152,6 @@
             }
         }
 
-        // PDF Generation
         async function generatePDF() {
             try {
                 const doc = new jsPDF();
@@ -183,9 +172,9 @@
 
                 // Header Text
                 doc.setFontSize(18);
-                doc.setTextColor(0, 0, 128); // Navy color
+                doc.setTextColor(19, 29, 53); // Updated RGB color
                 doc.text("Roof Inspection Report", pageWidth/2, yPos, { align: 'center' });
-                yPos += 20; // Reduced spacing after title
+                yPos += 20;
 
                 // Report Details
                 doc.setFontSize(12);
@@ -243,8 +232,8 @@
                             const imgData = await readFile(photos[j]);
                             const imgProps = doc.getImageProperties(imgData);
                             
-                            // Set scale to 25%
-                            const scaleFactor = 0.25;
+                            // Set scale to 20%
+                            const scaleFactor = 0.2;
                             let width = imgProps.width * scaleFactor;
                             let height = imgProps.height * scaleFactor;
 
@@ -277,7 +266,6 @@
             }
         }
 
-        // File Handling Functions remain unchanged
         function loadLogo() {
             return new Promise((resolve, reject) => {
                 const img = new Image();
@@ -298,7 +286,6 @@
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
-                            // Adjust canvas based on orientation
                             if (orientation > 4) {
                                 canvas.width = img.height;
                                 canvas.height = img.width;
@@ -307,7 +294,6 @@
                                 canvas.height = img.height;
                             }
 
-                            // Apply orientation transformations
                             switch(orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
                                 case 3: ctx.transform(-1, 0, 0, -1, img.width, img.height); break;
