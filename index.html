@@ -37,7 +37,7 @@
             width: 100%;
             padding: 10px;
             border: 1px solid #ced4da;
-            border-radius: 4px;
+            border-radius: 4x;
             box-sizing: border-box;
             margin-bottom: 15px;
         }
@@ -71,7 +71,6 @@
         <p>Where quality meets the sky</p>
     </div>
 
-    <!-- Main Form -->
     <div class="form-group">
         <label>Property Address:</label>
         <input type="text" id="address" required>
@@ -103,7 +102,6 @@
         </select>
     </div>
 
-    <!-- Issues Container -->
     <div id="issues-container">
         <div class="form-group issue-section">
             <label>Issue Description:</label>
@@ -172,7 +170,7 @@
 
                 // Header Text
                 doc.setFontSize(18);
-                doc.setTextColor(19, 29, 53); // Updated RGB color
+                doc.setTextColor(19, 29, 53);
                 doc.text("Roof Inspection Report", pageWidth/2, yPos, { align: 'center' });
                 yPos += 20;
 
@@ -286,7 +284,8 @@
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
-                            if (orientation > 4) {
+                            // Adjust canvas based on orientation
+                            if ([5,6,7,8].includes(orientation)) {
                                 canvas.width = img.height;
                                 canvas.height = img.width;
                             } else {
@@ -294,6 +293,8 @@
                                 canvas.height = img.height;
                             }
 
+                            // Apply transformations
+                            ctx.save();
                             switch(orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
                                 case 3: ctx.transform(-1, 0, 0, -1, img.width, img.height); break;
@@ -302,9 +303,11 @@
                                 case 6: ctx.transform(0, 1, -1, 0, img.height, 0); break;
                                 case 7: ctx.transform(0, -1, -1, 0, img.height, img.width); break;
                                 case 8: ctx.transform(0, -1, 1, 0, 0, img.width); break;
+                                default: break;
                             }
 
                             ctx.drawImage(img, 0, 0);
+                            ctx.restore();
                             resolve(canvas.toDataURL('image/jpeg'));
                         };
                         img.src = e.target.result;
