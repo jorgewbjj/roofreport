@@ -264,7 +264,7 @@
                     const logoWidth = 80;
                     const logoHeight = (logo.naturalHeight / logo.naturalWidth) * logoWidth;
                     doc.addImage(logo, 'PNG', (pageWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
-                    yPos += logoHeight + 15;
+                    yPos += logoHeight + 10;
                 } catch(error) {
                     console.warn('Could not load logo:', error.message);
                 }
@@ -272,7 +272,7 @@
                 doc.setFontSize(18);
                 doc.setTextColor(19, 29, 53);
                 doc.text("Roof Inspection Report", pageWidth / 2, yPos, { align: 'center' });
-                yPos += 20;
+                yPos += 15;
 
                 doc.setFontSize(12);
                 doc.setTextColor(0);
@@ -290,10 +290,10 @@
                         yPos = 20;
                     }
                     doc.text(line, 20, yPos);
-                    yPos += 10;
+                    yPos += 8;
                 });
 
-                yPos += 10;
+                yPos += 8;
 
                 const observationSections = document.getElementsByClassName('observation-section');
                 for(let i = 0; i < observationSections.length; i++) {
@@ -315,8 +315,8 @@
 
                     // Calculate required space
                     const splitText = doc.splitTextToSize(desc, pageWidth - 40);
-                    const textHeight = splitText.length * 7 + 17; // 17 for heading and spacing
-                    const imagesHeight = images.reduce((sum, img) => sum + img.height + 10, 0);
+                    const textHeight = splitText.length * 6 + 10; // Reduced spacing
+                    const imagesHeight = images.reduce((sum, img) => sum + img.height + 5, 0);
                     const totalHeight = textHeight + imagesHeight;
 
                     // Check page space
@@ -328,14 +328,14 @@
                     // Add observation text
                     doc.setFont('helvetica', 'bold');
                     doc.text(`Observation #${i+1}:`, 20, yPos);
-                    yPos += 7;
+                    yPos += 6;
                     
                     doc.setFont('helvetica', 'normal');
                     splitText.forEach(line => {
                         doc.text(line, 20, yPos);
-                        yPos += 7;
+                        yPos += 6;
                     });
-                    yPos += 10;
+                    yPos += 4;
 
                     // Add images
                     for(const img of images) {
@@ -344,9 +344,9 @@
                             yPos = 20;
                         }
                         doc.addImage(img.imgData, 'JPEG', 20, yPos, img.width, img.height);
-                        yPos += img.height + 10;
+                        yPos += img.height + 3;
                     }
-                    yPos += 5;
+                    yPos += 2;
                 }
 
                 const address = document.getElementById('address').value
