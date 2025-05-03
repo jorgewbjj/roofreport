@@ -242,7 +242,6 @@
                 const pageWidth = doc.internal.pageSize.getWidth();
                 let yPos = 20;
 
-                // Add Logo
                 try {
                     const logo = await loadLogo();
                     const logoWidth = 80;
@@ -253,13 +252,11 @@
                     console.warn('Could not load logo:', error.message);
                 }
 
-                // Report Title
                 doc.setFontSize(18);
                 doc.setTextColor(19, 29, 53);
                 doc.text("Roof Inspection Report", pageWidth / 2, yPos, { align: 'center' });
                 yPos += 20;
 
-                // Inspection Details
                 doc.setFontSize(12);
                 doc.setTextColor(0);
                 const details = [
@@ -281,14 +278,12 @@
 
                 yPos += 10;
 
-                // Observations and Photos
                 const observationSections = document.getElementsByClassName('observation-section');
                 for(let i = 0; i < observationSections.length; i++) {
                     const observation = observationSections[i];
                     const desc = observation.querySelector('.observation-desc').value;
                     const photos = observation.querySelector('.observation-photos').files;
 
-                    // Observation Text
                     doc.setFont('helvetica', 'bold');
                     doc.text(`Observation #${i+1}:`, 20, yPos);
                     yPos += 7;
@@ -305,13 +300,10 @@
                     });
                     yPos += 10;
 
-                    // Observation Photos
                     for(let j = 0; j < photos.length; j++) {
                         try {
                             const imgData = await readFile(photos[j]);
                             const imgProps = doc.getImageProperties(imgData);
-                            
-                            // Calculate image dimensions
                             const maxWidth = pageWidth - 40;
                             const scaleFactor = maxWidth / imgProps.width;
                             const width = imgProps.width * scaleFactor;
@@ -331,14 +323,12 @@
                     yPos += 15;
                 }
 
-                // Generate Filename
                 const address = document.getElementById('address').value
                     .replace(/[^a-zA-Z0-9]/g, '_')
                     .substring(0, 50);
                 const date = document.getElementById('date').value;
                 const filename = `Inspection_Report_${address}_${date}.pdf`;
 
-                // Save PDF
                 doc.save(filename);
             } catch (error) {
                 alert(`Error generating PDF: ${error.message}`);
@@ -365,7 +355,6 @@
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
-                            // Adjust canvas based on orientation
                             if ([5,6,7,8].includes(orientation)) {
                                 canvas.width = img.height;
                                 canvas.height = img.width;
@@ -374,7 +363,6 @@
                                 canvas.height = img.height;
                             }
 
-                            // Transform context
                             ctx.save();
                             switch(orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
