@@ -258,7 +258,16 @@
                     yPos += 15;
                 }
 
-                doc.save(`SEAL-TOP-Report-${new Date().toISOString().slice(0,10)}.pdf`);
+                // Generate filename with sanitized address and date
+                const rawAddress = document.getElementById('address').value;
+                const inspectionDate = document.getElementById('date').value;
+                const sanitizedAddress = rawAddress
+                    .trim()
+                    .replace(/\s+/g, '_')
+                    .replace(/[^a-zA-Z0-9_]/g, '');
+                const fileName = `${sanitizedAddress}_${inspectionDate}.pdf`;
+
+                doc.save(fileName);
             } catch (error) {
                 alert(`Error: ${error.message}`);
             }
