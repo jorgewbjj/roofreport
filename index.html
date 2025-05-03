@@ -240,24 +240,26 @@
             try {
                 const doc = new jsPDF();
                 const pageWidth = doc.internal.pageSize.getWidth();
-                let yPos = 0;
+                let yPos = 20;
 
+                // Add Logo
                 try {
                     const logo = await loadLogo();
-                    const desiredWidth = 80;
-                    const aspectRatio = logo.naturalHeight / logo.naturalWidth;
-                    const logoHeight = desiredWidth * aspectRatio;
-                    doc.addImage(logo, 'PNG', 20, 15, desiredWidth, logoHeight);
-                    yPos = 15 + logoHeight + 10;
-                } catch {
-                    yPos = 20;
+                    const logoWidth = 80;
+                    const logoHeight = (logo.naturalHeight / logo.naturalWidth) * logoWidth;
+                    doc.addImage(logo, 'PNG', (pageWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
+                    yPos += logoHeight + 15;
+                } catch(error) {
+                    console.warn('Could not load logo:', error.message);
                 }
 
+                // Report Title
                 doc.setFontSize(18);
                 doc.setTextColor(19, 29, 53);
-                doc.text("Roof Inspection Report", pageWidth/2, yPos, { align: 'center' });
+                doc.text("Roof Inspection Report", pageWidth / 2, yPos, { align: 'center' });
                 yPos += 20;
 
+                // Inspection Details
                 doc.setFontSize(12);
                 doc.setTextColor(0);
                 const details = [
@@ -277,25 +279,23 @@
                     yPos += 10;
                 });
 
-                yPos += 15;
+                yPos += 10;
 
+                // Observations and Photos
                 const observationSections = document.getElementsByClassName('observation-section');
                 for(let i = 0; i < observationSections.length; i++) {
                     const observation = observationSections[i];
                     const desc = observation.querySelector('.observation-desc').value;
                     const photos = observation.querySelector('.observation-photos').files;
 
-                    if(yPos > 250) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
+                    // Observation Text
                     doc.setFont('helvetica', 'bold');
                     doc.text(`Observation #${i+1}:`, 20, yPos);
                     yPos += 7;
 
                     doc.setFont('helvetica', 'normal');
-                    const observationsText = doc.splitTextToSize(desc, 170);
-                    observationsText.forEach(line => {
+                    const splitText = doc.splitTextToSize(desc, pageWidth - 40);
+                    splitText.forEach(line => {
                         if(yPos > 280) {
                             doc.addPage();
                             yPos = 20;
@@ -305,21 +305,17 @@
                     });
                     yPos += 10;
 
+                    // Observation Photos
                     for(let j = 0; j < photos.length; j++) {
                         try {
                             const imgData = await readFile(photos[j]);
                             const imgProps = doc.getImageProperties(imgData);
                             
-                            const scaleFactor = 0.2;
-                            let width = imgProps.width * scaleFactor;
-                            let height = imgProps.height * scaleFactor;
-
+                            // Calculate image dimensions
                             const maxWidth = pageWidth - 40;
-                            if(width > maxWidth) {
-                                const ratio = maxWidth / width;
-                                width *= ratio;
-                                height *= ratio;
-                            }
+                            const scaleFactor = maxWidth / imgProps.width;
+                            const width = imgProps.width * scaleFactor;
+                            const height = imgProps.height * scaleFactor;
 
                             if(yPos + height > 280) {
                                 doc.addPage();
@@ -335,18 +331,17 @@
                     yPos += 15;
                 }
 
-                // Generate filename with sanitized address and date
-                const rawAddress = document.getElementById('address').value;
-                const inspectionDate = document.getElementById('date').value;
-                const sanitizedAddress = rawAddress
-                    .trim()
-                    .replace(/\s+/g, '_')
-                    .replace(/[^a-zA-Z0-9_]/g, '');
-                const fileName = `${sanitizedAddress}_${inspectionDate}.pdf`;
+                // Generate Filename
+                const address = document.getElementById('address').value
+                    .replace(/[^a-zA-Z0-9]/g, '_')
+                    .substring(0, 50);
+                const date = document.getElementById('date').value;
+                const filename = `Inspection_Report_${address}_${date}.pdf`;
 
-                doc.save(fileName);
+                // Save PDF
+                doc.save(filename);
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                alert(`Error generating PDF: ${error.message}`);
             }
         }
 
@@ -354,7 +349,7 @@
             return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error('Logo not found. Ensure file exists and is named "Logo seal e slogan@2x.png"'));
+                img.onerror = () => reject(new Error('Logo not found'));
                 img.src = 'Logo%20seal%20e%20slogan@2x.png';
             });
         }
@@ -370,6 +365,7 @@
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
+                            // Adjust canvas based on orientation
                             if ([5,6,7,8].includes(orientation)) {
                                 canvas.width = img.height;
                                 canvas.height = img.width;
@@ -378,6 +374,7 @@
                                 canvas.height = img.height;
                             }
 
+                            // Transform context
                             ctx.save();
                             switch(orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
