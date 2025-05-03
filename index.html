@@ -37,7 +37,7 @@
             width: 100%;
             padding: 10px;
             border: 1px solid #ced4da;
-            border-radius: 4x;
+            border-radius: 4px;
             box-sizing: border-box;
             margin-bottom: 15px;
         }
@@ -72,6 +72,15 @@
     </div>
 
     <div class="form-group">
+        <label>Roof Condition:</label>
+        <select id="roof-condition" required>
+            <option value="Good">Good</option>
+            <option value="Fair">Fair</option>
+            <option value="Poor">Poor</option>
+        </select>
+    </div>
+
+    <div class="form-group">
         <label>Property Address:</label>
         <input type="text" id="address" required>
     </div>
@@ -102,17 +111,17 @@
         </select>
     </div>
 
-    <div id="issues-container">
-        <div class="form-group issue-section">
-            <label>Issue Description:</label>
-            <textarea class="issue-desc" required></textarea>
-            <label>Upload Photos for This Issue:</label>
-            <input type="file" class="issue-photos" multiple accept="image/*">
-            <button type="button" class="remove-btn" onclick="removeIssue(this)">Remove Issue</button>
+    <div id="observations-container">
+        <div class="form-group observation-section">
+            <label>Observation Description:</label>
+            <textarea class="observation-desc" required></textarea>
+            <label>Upload Photos for This Observation:</label>
+            <input type="file" class="observation-photos" multiple accept="image/*">
+            <button type="button" class="remove-btn" onclick="removeObservation(this)">Remove Observation</button>
         </div>
     </div>
 
-    <button class="add-btn" onclick="addIssue()">Add Another Issue</button>
+    <button class="add-btn" onclick="addObservation()">Add Another Observation</button>
     <button class="submit-btn" onclick="generatePDF()">Generate Report</button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -126,27 +135,27 @@
         }
 
         const { jsPDF } = window.jspdf;
-        let issueCount = 1;
+        let observationCount = 1;
 
-        function addIssue() {
-            const container = document.getElementById('issues-container');
-            const newIssue = document.createElement('div');
-            newIssue.className = 'form-group issue-section';
-            newIssue.innerHTML = `
-                <label>Issue Description:</label>
-                <textarea class="issue-desc" required></textarea>
-                <label>Upload Photos for This Issue:</label>
-                <input type="file" class="issue-photos" multiple accept="image/*">
-                <button type="button" class="remove-btn" onclick="removeIssue(this)">Remove Issue</button>
+        function addObservation() {
+            const container = document.getElementById('observations-container');
+            const newObservation = document.createElement('div');
+            newObservation.className = 'form-group observation-section';
+            newObservation.innerHTML = `
+                <label>Observation Description:</label>
+                <textarea class="observation-desc" required></textarea>
+                <label>Upload Photos for This Observation:</label>
+                <input type="file" class="observation-photos" multiple accept="image/*">
+                <button type="button" class="remove-btn" onclick="removeObservation(this)">Remove Observation</button>
             `;
-            container.appendChild(newIssue);
-            issueCount++;
+            container.appendChild(newObservation);
+            observationCount++;
         }
 
-        function removeIssue(button) {
-            if(issueCount > 1) {
+        function removeObservation(button) {
+            if(observationCount > 1) {
                 button.parentElement.remove();
-                issueCount--;
+                observationCount--;
             }
         }
 
@@ -156,7 +165,6 @@
                 const pageWidth = doc.internal.pageSize.getWidth();
                 let yPos = 0;
 
-                // Add Logo
                 try {
                     const logo = await loadLogo();
                     const desiredWidth = 80;
@@ -168,20 +176,19 @@
                     yPos = 20;
                 }
 
-                // Header Text
                 doc.setFontSize(18);
                 doc.setTextColor(19, 29, 53);
                 doc.text("Roof Inspection Report", pageWidth/2, yPos, { align: 'center' });
                 yPos += 20;
 
-                // Report Details
                 doc.setFontSize(12);
                 doc.setTextColor(0);
                 const details = [
                     `Property Address: ${document.getElementById('address').value}`,
                     `Inspector: ${document.getElementById('inspector').value}`,
                     `Inspection Date: ${document.getElementById('date').value}`,
-                    `Roof Type: ${document.getElementById('roof-type').value}`
+                    `Roof Type: ${document.getElementById('roof-type').value}`,
+                    `Roof Condition: ${document.getElementById('roof-condition').value}`
                 ];
 
                 details.forEach(line => {
@@ -195,26 +202,23 @@
 
                 yPos += 15;
 
-                // Issues Section
-                const issueSections = document.getElementsByClassName('issue-section');
-                for(let i = 0; i < issueSections.length; i++) {
-                    const issue = issueSections[i];
-                    const desc = issue.querySelector('.issue-desc').value;
-                    const photos = issue.querySelector('.issue-photos').files;
+                const observationSections = document.getElementsByClassName('observation-section');
+                for(let i = 0; i < observationSections.length; i++) {
+                    const observation = observationSections[i];
+                    const desc = observation.querySelector('.observation-desc').value;
+                    const photos = observation.querySelector('.observation-photos').files;
 
-                    // Issue Header
                     if(yPos > 250) {
                         doc.addPage();
                         yPos = 20;
                     }
                     doc.setFont('helvetica', 'bold');
-                    doc.text(`Issue #${i+1}:`, 20, yPos);
+                    doc.text(`Observation #${i+1}:`, 20, yPos);
                     yPos += 7;
 
-                    // Issue Description
                     doc.setFont('helvetica', 'normal');
-                    const issuesText = doc.splitTextToSize(desc, 170);
-                    issuesText.forEach(line => {
+                    const observationsText = doc.splitTextToSize(desc, 170);
+                    observationsText.forEach(line => {
                         if(yPos > 280) {
                             doc.addPage();
                             yPos = 20;
@@ -224,18 +228,15 @@
                     });
                     yPos += 10;
 
-                    // Photos
                     for(let j = 0; j < photos.length; j++) {
                         try {
                             const imgData = await readFile(photos[j]);
                             const imgProps = doc.getImageProperties(imgData);
                             
-                            // Set scale to 20%
                             const scaleFactor = 0.2;
                             let width = imgProps.width * scaleFactor;
                             let height = imgProps.height * scaleFactor;
 
-                            // Ensure image fits page width
                             const maxWidth = pageWidth - 40;
                             if(width > maxWidth) {
                                 const ratio = maxWidth / width;
@@ -243,7 +244,6 @@
                                 height *= ratio;
                             }
 
-                            // Check page space
                             if(yPos + height > 280) {
                                 doc.addPage();
                                 yPos = 20;
@@ -284,7 +284,6 @@
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
-                            // Adjust canvas based on orientation
                             if ([5,6,7,8].includes(orientation)) {
                                 canvas.width = img.height;
                                 canvas.height = img.width;
@@ -293,7 +292,6 @@
                                 canvas.height = img.height;
                             }
 
-                            // Apply transformations
                             ctx.save();
                             switch(orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
