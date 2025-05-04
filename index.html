@@ -277,7 +277,6 @@
                 doc.setFontSize(12);
                 doc.setTextColor(0);
                 
-                // Format date to mm/dd/yyyy
                 const rawDate = document.getElementById('date').value;
                 const [year, month, day] = rawDate.split('-');
                 const formattedDate = `${month}/${day}/${year}`;
@@ -307,31 +306,34 @@
                     const desc = observation.querySelector('.observation-desc').value;
                     const photos = observation.querySelector('.observation-photos').files;
 
-                    // Process all photos first to get dimensions
                     const images = [];
                     for(let j = 0; j < photos.length; j++) {
                         const imgData = await readFile(photos[j]);
                         const imgProps = doc.getImageProperties(imgData);
-                        const maxWidth = (pageWidth - 40) * 0.5;
+                        const maxWidth = (pageWidth - 45) * 0.5;
                         const scaleFactor = maxWidth / imgProps.width;
                         const width = imgProps.width * scaleFactor;
                         const height = imgProps.height * scaleFactor;
                         images.push({ imgData, width, height });
                     }
 
-                    // Calculate required space
                     const splitText = doc.splitTextToSize(desc, pageWidth - 40);
                     const textHeight = splitText.length * 6 + 10;
-                    const imagesHeight = images.reduce((sum, img) => sum + img.height + 5, 0);
+                    const imagesHeight = images.reduce((sum, img, index) => {
+                        if(index % 2 === 0) {
+                            const nextImg = images[index + 1];
+                            const pairHeight = Math.max(img.height, nextImg?.height || 0);
+                            return sum + pairHeight + 5;
+                        }
+                        return sum;
+                    }, 0);
                     const totalHeight = textHeight + imagesHeight;
 
-                    // Check page space
                     if(yPos + totalHeight > 280) {
                         doc.addPage();
                         yPos = 20;
                     }
 
-                    // Add observation text
                     doc.setFont('helvetica', 'bold');
                     doc.text(`Observation #${i+1}:`, 20, yPos);
                     yPos += 6;
@@ -343,14 +345,28 @@
                     });
                     yPos += 4;
 
-                    // Add images
-                    for(const img of images) {
-                        if(yPos + img.height > 280) {
+                    let imgIndex = 0;
+                    while(imgIndex < images.length) {
+                        const img1 = images[imgIndex];
+                        const img2 = images[imgIndex + 1];
+                        const pairHeight = Math.max(img1.height, img2?.height || 0);
+
+                        if(yPos + pairHeight > 280) {
                             doc.addPage();
                             yPos = 20;
                         }
-                        doc.addImage(img.imgData, 'JPEG', 20, yPos, img.width, img.height);
-                        yPos += img.height + 3;
+
+                        doc.addImage(img1.imgData, 'JPEG', 20, yPos, img1.width, img1.height);
+
+                        if(img2) {
+                            const x2 = 20 + img1.width + 5;
+                            doc.addImage(img2.imgData, 'JPEG', x2, yPos, img2.width, img2.height);
+                            imgIndex += 2;
+                        } else {
+                            imgIndex += 1;
+                        }
+
+                        yPos += pairHeight + 5;
                     }
                     yPos += 2;
                 }
