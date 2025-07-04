@@ -15,113 +15,120 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
-      margin: 0; padding: 15px;
+      margin:0; padding:15px;
       color: var(--text-color);
-      font-size: 16px;
+      font-size:16px;
     }
     .header {
-      text-align: center;
-      margin-bottom: 15px;
-      padding: 15px 0;
-      background: #f8f9fa;
-      border-radius: 10px;
+      text-align:center;
+      margin-bottom:15px;
+      padding:15px 0;
+      background:#f8f9fa;
+      border-radius:10px;
     }
-    .logo {
-      height: 60px;
-      margin-bottom: 10px;
-    }
-    .top-details, #observations-container {
-      margin-bottom: 15px;
-    }
-    .top-details {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
+    .logo { height:60px; margin-bottom:10px; }
     .form-group {
-      padding: 15px;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      background: white;
-      margin-bottom: 15px;
+      background:white;
+      border:1px solid #dee2e6;
+      border-radius:8px;
+      padding:15px;
+      margin-bottom:15px;
     }
-    label { font-weight: bold; display: block; margin-bottom: 8px; }
+    label { font-weight:bold; display:block; margin-bottom:8px; }
     input, select, textarea {
-      width: 100%; padding: 12px;
-      border: 1px solid #ced4da; border-radius: 6px;
-      font-size: 16px; margin-bottom: 12px;
-      -webkit-appearance: none;
+      width:100%; padding:12px;
+      border:1px solid #ced4da; border-radius:6px;
+      font-size:16px; margin-bottom:12px;
     }
-    textarea { min-height: 100px; }
+    textarea { min-height:100px; }
+    .top-details {
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-bottom:15px;
+    }
+    @media(max-width:480px){
+      .top-details { grid-template-columns:1fr; }
+      button { width:100%; }
+    }
     .button-group {
-      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:20px;
     }
     button {
-      padding: 14px 20px; border: none; border-radius: 6px;
-      cursor: pointer; font-size: 16px; flex: 1; min-width: 120px;
-      transition: opacity 0.2s;
+      padding:14px 20px; border:none; border-radius:6px;
+      cursor:pointer; font-size:16px; flex:1; min-width:120px;
+      transition:opacity .2s;
     }
-    button:active { opacity: 0.8; }
-    .add-btn { background-color: var(--success-color); color: white; }
-    .remove-btn { background-color: var(--danger-color); color: white; }
-    .submit-btn { background-color: var(--primary-color); color: white; }
+    button:active{opacity:.8;}
+    .add-btn{background:var(--success-color);color:#fff;}
+    .remove-btn{background:var(--danger-color);color:#fff;}
+    .submit-btn{background:var(--primary-color);color:#fff;}
 
-    @media (min-width: 768px) {
-      body { max-width: 800px; margin: 0 auto; padding: 20px; }
-      .logo { height: 80px; }
-      button { flex: none; }
-      .submit-btn { float: right; }
+    /* past reports table */
+    #reportsTable {
+      width:100%; border-collapse:collapse; margin-top:10px;
     }
-    @media (max-width: 480px) {
-      .top-details { grid-template-columns: 1fr; }
-      .form-group { padding: 12px; }
-      button { width: 100%; }
+    #reportsTable th, #reportsTable td {
+      border:1px solid #ccc; padding:8px; text-align:left;
+    }
+    #reportsTable th { background:#f0f0f0; }
+
+    /* photo previews */
+    .photo-previews { margin-top:10px; }
+    .photo-wrapper {
+      position: relative;
+      display: inline-block;
+      margin:4px;
+    }
+    .photo-wrapper img {
+      width:80px; height:80px;
+      object-fit:cover;
+      border:1px solid #ccc;
+      border-radius:4px;
+    }
+    .remove-photo-btn {
+      position:absolute;
+      top:2px; right:2px;
+      background:rgba(0,0,0,0.6);
+      color:#fff; border:none;
+      border-radius:50%;
+      width:20px; height:20px;
+      font-size:14px;
+      line-height:18px;
+      text-align:center;
+      cursor:pointer;
     }
 
-    .photo-previews img {
-      width: 80px; height: 80px;
-      object-fit: cover;
-      margin: 4px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    /* Cropper modal */
+    /* crop modal */
     #cropModal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.7);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
+      display:none;
+      position:fixed; top:0; left:0;
+      width:100vw; height:100vh;
+      background:rgba(0,0,0,0.7);
+      justify-content:center; align-items:center;
+      z-index:1000;
     }
     #cropModal .modal-content {
-      background: #fff;
-      border-radius: 8px;
-      width: 95vw; max-width: 400px;
-      max-height: 90vh;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
+      background:#fff;
+      border-radius:8px;
+      width:90vw; max-width:400px;
+      max-height:90vh;
+      padding:10px;
+      display:flex; flex-direction:column;
     }
     #cropModal .modal-close {
-      align-self: flex-end;
-      cursor: pointer;
-      font-size: 24px;
-      margin-bottom: 5px;
+      align-self:flex-end;
+      cursor:pointer;
+      font-size:24px;
+      margin-bottom:5px;
     }
     #cropModal img {
-      max-width: 100%;
-      max-height: 70vh;
-      margin: 0 auto;
-      display: block;
+      max-width:100%;
+      max-height:70vh;
+      display:block; margin:0 auto;
     }
     #cropModal .modal-buttons {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
+      display:flex; justify-content:space-around; margin-top:10px;
     }
   </style>
 
@@ -140,12 +147,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 <body>
-  <!-- report selector -->
   <div class="form-group">
-    <label for="reportList">Select Report:</label>
+    <label for="reportList">Select or Edit Report:</label>
     <select id="reportList">
       <option value="">New Report</option>
     </select>
+  </div>
+
+  <div id="pastReports" class="form-group">
+    <h2>Past Reports</h2>
+    <table id="reportsTable">
+      <thead>
+        <tr><th>Date</th><th>Property</th><th>Action</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
   <div class="header">
@@ -199,15 +215,15 @@
       <span id="cropClose" class="modal-close">&times;</span>
       <img id="cropImage" src="" alt="Crop">
       <div class="modal-buttons">
-        <button id="rotateLeft">Rotate Left</button>
-        <button id="rotateRight">Rotate Right</button>
-        <button id="cropConfirm">Crop</button>
+        <button id="rotateLeft">⟲ Rotate Left</button>
+        <button id="rotateRight">⟳ Rotate Right</button>
+        <button id="cropConfirm">✓ Crop</button>
       </div>
     </div>
   </div>
 
   <script>
-  // ===== Firebase init =====
+  // ==== Firebase init ====
 const firebaseConfig = {
   apiKey: "AIzaSyByxwR_TWiWYMe65G9AxBFgv-_oxX9MThk",
   authDomain: "fieldreport-1c1d2.firebaseapp.com",
@@ -222,61 +238,92 @@ const firebaseConfig = {
   const storage = firebase.storage();
   let loadedReportId = "";
 
-  // ===== DOM refs =====
-  const reportList = document.getElementById('reportList');
-  const obsContainer = document.getElementById('observations-container');
-  const cropModal   = document.getElementById('cropModal');
-  const cropImage   = document.getElementById('cropImage');
-  const rotateLeft  = document.getElementById('rotateLeft');
-  const rotateRight = document.getElementById('rotateRight');
-  const cropConfirm = document.getElementById('cropConfirm');
-  const cropClose   = document.getElementById('cropClose');
+  // ==== DOM refs ====
+  const reportList      = document.getElementById('reportList');
+  const pastReportsBody = document.querySelector('#reportsTable tbody');
+  const obsContainer    = document.getElementById('observations-container');
+  const cropModal       = document.getElementById('cropModal');
+  const cropImage       = document.getElementById('cropImage');
+  const rotateLeft      = document.getElementById('rotateLeft');
+  const rotateRight     = document.getElementById('rotateRight');
+  const cropConfirm     = document.getElementById('cropConfirm');
+  const cropClose       = document.getElementById('cropClose');
   let cropper, currentSection;
 
-  // ===== Setup =====
+  // ==== Initialization ====
+  window.addEventListener('DOMContentLoaded', () => {
+    setDefaultDate();
+    loadReports();
+    addObservation(); // start with one
+  });
+
   function setDefaultDate() {
-    const d = new Date();
-    document.getElementById('date').value =
+    const d=new Date();
+    document.getElementById('date').value=
       `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
+
+  // ==== Load and list reports ====
   async function loadReports() {
     const snap = await db.ref('reports').once('value');
+    // dropdown
     reportList.querySelectorAll('option:not([value=""])').forEach(o=>o.remove());
-    snap.forEach(ch=>{
+    // table
+    pastReportsBody.innerHTML = '';
+    snap.forEach(ch => {
+      const data = ch.val();
+      // dropdown
       const opt = document.createElement('option');
       opt.value = ch.key;
-      const d = ch.val();
-      opt.text = `${d.date} — ${d.address}`;
+      opt.textContent = `${data.date} — ${data.address}`;
       reportList.appendChild(opt);
+      // table row
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${data.date}</td>
+        <td>${data.address}</td>
+        <td><button data-id="${ch.key}">Edit</button></td>
+      `;
+      pastReportsBody.appendChild(tr);
+      tr.querySelector('button').onclick = () => {
+        reportList.value = ch.key;
+        loadReport(ch.key);
+      };
     });
   }
-  reportList.addEventListener('change', async ()=>{
+
+  reportList.addEventListener('change', () => {
     const id = reportList.value;
-    if(!id) return resetForm();
+    if (!id) return resetForm();
+    loadReport(id);
+  });
+
+  async function loadReport(id) {
     const snap = await db.ref(`reports/${id}`).once('value');
     const data = snap.val();
     loadedReportId = id;
-    // populate fields
-    document.getElementById('address').value = data.address;
-    document.getElementById('inspector').value = data.inspector;
-    document.getElementById('roof-type').value = data.roofType;
+    // populate form
+    document.getElementById('address').value      = data.address;
+    document.getElementById('inspector').value    = data.inspector;
+    document.getElementById('roof-type').value    = data.roofType;
     document.getElementById('roof-condition').value = data.roofCondition;
-    document.getElementById('date').value = data.date;
+    document.getElementById('date').value         = data.date;
     // observations
     obsContainer.innerHTML = '';
     observationCount = 0;
-    data.observations.forEach(obs=>{
+    data.observations.forEach(obs => {
       addObservation();
       const sec = obsContainer.children[observationCount-1];
       sec.querySelector('.observation-desc').value = obs.desc;
-      sec.photosDataUrls = obs.photos||[];
+      sec.photosDataUrls = obs.photos.slice();
       updatePreview(sec);
     });
-  });
+  }
+
   function resetForm() {
     loadedReportId = '';
     ['address','inspector','roof-type','roof-condition'].forEach(id=>{
-      const el = document.getElementById(id);
+      const el=document.getElementById(id);
       if(el.tagName==='SELECT') el.selectedIndex=0;
       else el.value='';
     });
@@ -286,7 +333,7 @@ const firebaseConfig = {
     addObservation();
   }
 
-  // ===== Observations & cropping =====
+  // ==== Observations & cropping ====
   let observationCount = 0;
   function addObservation() {
     const div = document.createElement('div');
@@ -298,22 +345,26 @@ const firebaseConfig = {
       <input type="file" class="observation-photos" multiple accept="image/*">
       <div class="button-group">
         <button type="button" class="remove-btn">Remove Observation</button>
-      </div>`;
+      </div>
+    `;
     obsContainer.appendChild(div);
     observationCount++;
-    // attach handlers
-    const removeBtn = div.querySelector('.remove-btn');
-    removeBtn.onclick = ()=> {
+
+    // remove button
+    div.querySelector('.remove-btn').onclick = () => {
       if(observationCount>1) {
-        div.remove();
-        observationCount--;
-      } else alert('At least one observation required');
+        div.remove(); observationCount--;
+      } else {
+        alert('At least one observation is required');
+      }
     };
-    const fileInput = div.querySelector('.observation-photos');
-    fileInput.onchange = e=>{
+
+    // file input -> cropping
+    const input = div.querySelector('.observation-photos');
+    input.onchange = e => {
       div.pendingFiles = Array.from(e.target.files);
       div.photosDataUrls = [];
-      e.target.value='';
+      e.target.value = '';
       processNextCrop(div);
     };
   }
@@ -327,52 +378,72 @@ const firebaseConfig = {
     currentSection = sec;
     const file = sec.pendingFiles.shift();
     const reader = new FileReader();
-    reader.onload = ()=> {
+    reader.onload = () => {
       cropImage.src = reader.result;
       openModal();
     };
     reader.readAsDataURL(file);
   }
+
   function openModal() {
-    cropModal.style.display='flex';
+    cropModal.style.display = 'flex';
     cropper = new Cropper(cropImage, {
-      aspectRatio: 1, viewMode:1, autoCropArea:1, responsive:true,
+      aspectRatio: 1,
+      viewMode: 1,
+      autoCropArea: 1,
+      responsive: true
     });
   }
+
   function closeModal() {
     if(cropper) cropper.destroy();
-    cropModal.style.display='none';
+    cropModal.style.display = 'none';
   }
-  rotateLeft.onclick  = ()=> cropper.rotate(-90);
-  rotateRight.onclick = ()=> cropper.rotate(90);
-  cropConfirm.onclick  = ()=>{
-    const canvas = cropper.getCroppedCanvas({ width:200, height:200 });
-    const url = canvas.toDataURL('image/jpeg',0.6);
-    currentSection.photosDataUrls.push(url);
+
+  rotateLeft.onclick  = () => cropper.rotate(-90);
+  rotateRight.onclick = () => cropper.rotate(90);
+
+  cropConfirm.onclick = () => {
+    const canvas = cropper.getCroppedCanvas({ width:300, height:300 });
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    currentSection.photosDataUrls.push(dataUrl);
     closeModal();
     processNextCrop(currentSection);
   };
-  cropClose.onclick = ()=> {
-    if(currentSection) currentSection.pendingFiles=[];
+
+  cropClose.onclick = () => {
+    if(currentSection) currentSection.pendingFiles = [];
     closeModal();
   };
 
   function updatePreview(sec) {
     sec.querySelectorAll('.photo-previews').forEach(e=>e.remove());
     if(sec.photosDataUrls?.length) {
-      const p = document.createElement('div');
-      p.className='photo-previews';
-      sec.photosDataUrls.forEach(u=>{
+      const container = document.createElement('div');
+      container.className = 'photo-previews';
+      sec.photosDataUrls.forEach((url, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'photo-wrapper';
         const img = document.createElement('img');
-        img.src = u;
-        p.appendChild(img);
+        img.src = url;
+        const btn = document.createElement('button');
+        btn.className = 'remove-photo-btn';
+        btn.textContent = '×';
+        btn.onclick = () => {
+          sec.photosDataUrls.splice(idx,1);
+          updatePreview(sec);
+        };
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        container.appendChild(wrap);
       });
-      sec.appendChild(p);
+      sec.appendChild(container);
     }
   }
 
-  // ===== PDF + Storage =====
+  // ==== PDF generation & Firebase save ====
   const { jsPDF } = window.jspdf;
+
   async function generatePDF() {
     try {
       // collect
@@ -382,36 +453,36 @@ const firebaseConfig = {
       const roofCondition = document.getElementById('roof-condition').value;
       const date = document.getElementById('date').value;
 
-      // ensure report ID
+      // ensure ref
       let ref;
       if(loadedReportId) {
         ref = db.ref(`reports/${loadedReportId}`);
       } else {
         ref = db.ref('reports').push();
         loadedReportId = ref.key;
-        const o = document.createElement('option');
-        o.value = loadedReportId;
-        o.text = `${date} — ${address}`;
-        reportList.appendChild(o);
+        const opt = document.createElement('option');
+        opt.value = loadedReportId;
+        opt.textContent = `${date} — ${address}`;
+        reportList.appendChild(opt);
         reportList.value = loadedReportId;
       }
 
       // build PDF
-      const doc = new jsPDF({ compress:true });
+      const doc = new jsPDF({ compress: true });
       const w = doc.internal.pageSize.getWidth();
       let y = 20;
 
-      // logo PNG color
+      // logo
       try {
         const imgEl = await new Promise((res,rej)=>{
-          const i = new Image();
+          const i=new Image();
           i.onload = ()=>res(i);
           i.onerror = ()=>rej();
           i.src='Logo%20seal%20e%20slogan@2x.png';
         });
         const dw=80, dh=(imgEl.naturalHeight/imgEl.naturalWidth)*dw;
         doc.addImage(imgEl,'PNG',(w-dw)/2,y,dw,dh);
-        y += dh+10;
+        y += dh + 10;
       } catch{}
 
       // header
@@ -421,8 +492,7 @@ const firebaseConfig = {
       y += 15;
 
       // details
-      doc.setFontSize(12);
-      doc.setTextColor(0);
+      doc.setFontSize(12); doc.setTextColor(0);
       const lines = [
         `Property: ${address}`,
         `Inspector: ${inspector}`,
@@ -430,80 +500,79 @@ const firebaseConfig = {
         `Roof Type: ${roofType}`,
         `Roof Condition: ${roofCondition}`
       ];
-      lines.forEach(l=>{
-        if(y>280){ doc.addPage(); y=20; }
-        doc.text(l,20,y);
-        y+=8;
+      lines.forEach(l => {
+        if(y > 280) { doc.addPage(); y = 20; }
+        doc.text(l, 20, y);
+        y += 8;
       });
-      y+=8;
+      y += 8;
 
       // observations
       const secs = [...document.querySelectorAll('.observation-section')];
       const savedObs = [];
-      const imgW = (w-45)/2;
-      for(let i=0;i<secs.length;i++){
-        const sec=secs[i];
+      const imgSize = (w - 45) / 2;
+
+      for(let i = 0; i < secs.length; i++) {
+        const sec = secs[i];
         const desc = sec.querySelector('.observation-desc').value.trim();
-        const photos = sec.photosDataUrls||[];
-        savedObs.push({desc,photos});
+        const photos = sec.photosDataUrls || [];
+        savedObs.push({ desc, photos });
 
         // text
-        const txt = doc.splitTextToSize(desc, w-40);
-        const txtH = txt.length*6+10;
-        const imgsH = Math.ceil(photos.length/2)*(imgW+5);
-        if(y+txtH+imgsH>280){doc.addPage();y=20;}
+        const txt = doc.splitTextToSize(desc, w - 40);
+        const txtH = txt.length * 6 + 10;
+        const imgsH = Math.ceil(photos.length/2) * (imgSize + 5);
+        if(y + txtH + imgsH > 280) { doc.addPage(); y = 20; }
+
         doc.setFont('helvetica','bold');
-        doc.text(`Observation #${i+1}:`,20,y);
-        y+=6;
+        doc.text(`Observation #${i+1}:`, 20, y);
+        y += 6;
         doc.setFont('helvetica','normal');
-        txt.forEach(l=>{doc.text(l,20,y);y+=6;});
-        y+=4;
+        txt.forEach(line => {
+          doc.text(line, 20, y);
+          y += 6;
+        });
+        y += 4;
 
         // images
-        let idx=0;
-        while(idx<photos.length){
-          if(y+imgW>280){doc.addPage();y=20;}
-          doc.addImage(photos[idx],'JPEG',20,y,imgW,imgW);
-          if(photos[idx+1]){
-            doc.addImage(photos[idx+1],'JPEG',20+imgW+5,y,imgW,imgW);
+        let idx = 0;
+        while(idx < photos.length) {
+          if(y + imgSize > 280) { doc.addPage(); y = 20; }
+          doc.addImage(photos[idx], 'JPEG', 20, y, imgSize, imgSize);
+          if(photos[idx+1]) {
+            doc.addImage(photos[idx+1], 'JPEG', 20 + imgSize + 5, y, imgSize, imgSize);
           }
-          idx+=2;
-          y+=imgW+5;
+          idx += 2;
+          y += imgSize + 5;
         }
-        y+=2;
+        y += 2;
       }
 
-      // output PDF & upload
+      // save PDF and upload
       const blob = doc.output('blob');
       const filename = `Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
       doc.save(filename);
 
-      // upload to Storage
+      // upload PDF
       const storageRef = storage.ref(`reports/${loadedReportId}/${filename}`);
-      await storageRef.put(blob, { contentType:'application/pdf' });
-      const downloadURL = await storageRef.getDownloadURL();
+      await storageRef.put(blob, { contentType: 'application/pdf' });
+      const pdfUrl = await storageRef.getDownloadURL();
 
       // save metadata
       await ref.set({
         address, inspector, roofType, roofCondition, date,
         observations: savedObs,
-        pdfUrl: downloadURL,
+        pdfUrl,
         updatedAt: Date.now()
       });
 
       alert('Report saved, PDF generated & uploaded!');
+      loadReports();
     } catch(err) {
       console.error(err);
-      alert('Error: '+err.message);
+      alert('Error: ' + err.message);
     }
   }
-
-  // ===== init on load =====
-  window.addEventListener('DOMContentLoaded', ()=>{
-    setDefaultDate();
-    loadReports();
-    addObservation();
-  });
   </script>
 </body>
 </html>
