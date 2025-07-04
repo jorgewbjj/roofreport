@@ -224,15 +224,15 @@
 
   <script>
   // ==== Firebase init ====
-const firebaseConfig = {
-  apiKey: "AIzaSyByxwR_TWiWYMe65G9AxBFgv-_oxX9MThk",
-  authDomain: "fieldreport-1c1d2.firebaseapp.com",
-  projectId: "fieldreport-1c1d2",
-  storageBucket: "fieldreport-1c1d2.firebasestorage.app",
-  messagingSenderId: "752765269064",
-  appId: "1:752765269064:web:c31c85f245e0c29ba4947d",
-  measurementId: "G-18DP7CSDW9"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyByxwR_TWiWYMe65G9AxBFgv-_oxX9MThk",
+    authDomain: "fieldreport-1c1d2.firebaseapp.com",
+    projectId: "fieldreport-1c1d2",
+    storageBucket: "fieldreport-1c1d2.firebasestorage.app",
+    messagingSenderId: "752765269064",
+    appId: "1:752765269064:web:c31c85f245e0c29ba4947d",
+    measurementId: "G-18DP7CSDW9"
+  };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const storage = firebase.storage();
@@ -266,18 +266,14 @@ const firebaseConfig = {
   // ==== Load and list reports ====
   async function loadReports() {
     const snap = await db.ref('reports').once('value');
-    // dropdown
     reportList.querySelectorAll('option:not([value=""])').forEach(o=>o.remove());
-    // table
     pastReportsBody.innerHTML = '';
     snap.forEach(ch => {
       const data = ch.val();
-      // dropdown
       const opt = document.createElement('option');
       opt.value = ch.key;
       opt.textContent = `${data.date} — ${data.address}`;
       reportList.appendChild(opt);
-      // table row
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${data.date}</td>
@@ -302,13 +298,11 @@ const firebaseConfig = {
     const snap = await db.ref(`reports/${id}`).once('value');
     const data = snap.val();
     loadedReportId = id;
-    // populate form
     document.getElementById('address').value      = data.address;
     document.getElementById('inspector').value    = data.inspector;
     document.getElementById('roof-type').value    = data.roofType;
     document.getElementById('roof-condition').value = data.roofCondition;
     document.getElementById('date').value         = data.date;
-    // observations
     obsContainer.innerHTML = '';
     observationCount = 0;
     data.observations.forEach(obs => {
@@ -350,16 +344,11 @@ const firebaseConfig = {
     obsContainer.appendChild(div);
     observationCount++;
 
-    // remove button
     div.querySelector('.remove-btn').onclick = () => {
-      if(observationCount>1) {
-        div.remove(); observationCount--;
-      } else {
-        alert('At least one observation is required');
-      }
+      if(observationCount>1) { div.remove(); observationCount--; }
+      else alert('At least one observation is required');
     };
 
-    // file input -> cropping
     const input = div.querySelector('.observation-photos');
     input.onchange = e => {
       div.pendingFiles = Array.from(e.target.files);
@@ -404,8 +393,9 @@ const firebaseConfig = {
   rotateRight.onclick = () => cropper.rotate(90);
 
   cropConfirm.onclick = () => {
+    // medium-quality: 70% JPEG
     const canvas = cropper.getCroppedCanvas({ width:300, height:300 });
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
     currentSection.photosDataUrls.push(dataUrl);
     closeModal();
     processNextCrop(currentSection);
@@ -446,14 +436,12 @@ const firebaseConfig = {
 
   async function generatePDF() {
     try {
-      // collect
       const address = document.getElementById('address').value.trim();
       const inspector = document.getElementById('inspector').value;
       const roofType = document.getElementById('roof-type').value;
       const roofCondition = document.getElementById('roof-condition').value;
       const date = document.getElementById('date').value;
 
-      // ensure ref
       let ref;
       if(loadedReportId) {
         ref = db.ref(`reports/${loadedReportId}`);
@@ -467,12 +455,10 @@ const firebaseConfig = {
         reportList.value = loadedReportId;
       }
 
-      // build PDF
       const doc = new jsPDF({ compress: true });
       const w = doc.internal.pageSize.getWidth();
       let y = 20;
 
-      // logo
       try {
         const imgEl = await new Promise((res,rej)=>{
           const i=new Image();
@@ -485,13 +471,11 @@ const firebaseConfig = {
         y += dh + 10;
       } catch{}
 
-      // header
       doc.setFontSize(18);
       doc.setTextColor(19,29,53);
       doc.text('Roof Inspection Report', w/2, y, { align:'center' });
       y += 15;
 
-      // details
       doc.setFontSize(12); doc.setTextColor(0);
       const lines = [
         `Property: ${address}`,
@@ -507,7 +491,6 @@ const firebaseConfig = {
       });
       y += 8;
 
-      // observations
       const secs = [...document.querySelectorAll('.observation-section')];
       const savedObs = [];
       const imgSize = (w - 45) / 2;
@@ -518,7 +501,6 @@ const firebaseConfig = {
         const photos = sec.photosDataUrls || [];
         savedObs.push({ desc, photos });
 
-        // text
         const txt = doc.splitTextToSize(desc, w - 40);
         const txtH = txt.length * 6 + 10;
         const imgsH = Math.ceil(photos.length/2) * (imgSize + 5);
@@ -534,7 +516,6 @@ const firebaseConfig = {
         });
         y += 4;
 
-        // images
         let idx = 0;
         while(idx < photos.length) {
           if(y + imgSize > 280) { doc.addPage(); y = 20; }
@@ -548,17 +529,14 @@ const firebaseConfig = {
         y += 2;
       }
 
-      // save PDF and upload
       const blob = doc.output('blob');
       const filename = `Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
       doc.save(filename);
 
-      // upload PDF
       const storageRef = storage.ref(`reports/${loadedReportId}/${filename}`);
       await storageRef.put(blob, { contentType: 'application/pdf' });
       const pdfUrl = await storageRef.getDownloadURL();
 
-      // save metadata
       await ref.set({
         address, inspector, roofType, roofCondition, date,
         observations: savedObs,
