@@ -15,8 +15,7 @@
     * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 15px;
+      margin: 0; padding: 15px;
       color: var(--text-color);
       font-size: 16px;
     }
@@ -31,39 +30,42 @@
       height: 60px;
       margin-bottom: 10px;
     }
-    .form-group {
+    .top-details, #observations-container {
       margin-bottom: 15px;
-      padding: 15px;
-      border: 1px solid #dee2e6;
-      border-radius: 8px;
-      background: white;
     }
     .top-details {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 10px;
+    }
+    .form-group {
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background: white;
       margin-bottom: 15px;
     }
+    label { font-weight: bold; display: block; margin-bottom: 8px; }
+    input, select, textarea {
+      width: 100%; padding: 12px;
+      border: 1px solid #ced4da; border-radius: 6px;
+      font-size: 16px; margin-bottom: 12px;
+      -webkit-appearance: none;
+    }
+    textarea { min-height: 100px; }
     .button-group {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 20px;
+      display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;
     }
     button {
-      padding: 14px 20px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      flex: 1;
-      min-width: 120px;
+      padding: 14px 20px; border: none; border-radius: 6px;
+      cursor: pointer; font-size: 16px; flex: 1; min-width: 120px;
       transition: opacity 0.2s;
     }
     button:active { opacity: 0.8; }
     .add-btn { background-color: var(--success-color); color: white; }
     .remove-btn { background-color: var(--danger-color); color: white; }
     .submit-btn { background-color: var(--primary-color); color: white; }
+
     @media (min-width: 768px) {
       body { max-width: 800px; margin: 0 auto; padding: 20px; }
       .logo { height: 80px; }
@@ -75,42 +77,58 @@
       .form-group { padding: 12px; }
       button { width: 100%; }
     }
+
     .photo-previews img {
-      max-width: 80px;
-      margin: 2px;
+      width: 80px; height: 80px;
+      object-fit: cover;
+      margin: 4px;
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+
     /* Cropper modal */
     #cropModal {
       display: none;
       position: fixed;
       top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.7);
       justify-content: center;
       align-items: center;
       z-index: 1000;
     }
     #cropModal .modal-content {
-      background: white;
-      padding: 20px;
-      position: relative;
-      max-width: 90%;
-      max-height: 90%;
-      overflow: auto;
+      background: #fff;
+      border-radius: 8px;
+      width: 95vw; max-width: 400px;
+      max-height: 90vh;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
     }
     #cropModal .modal-close {
-      position: absolute;
-      top: 10px; right: 10px;
+      align-self: flex-end;
       cursor: pointer;
-      font-size: 20px;
+      font-size: 24px;
+      margin-bottom: 5px;
+    }
+    #cropModal img {
+      max-width: 100%;
+      max-height: 70vh;
+      margin: 0 auto;
+      display: block;
     }
     #cropModal .modal-buttons {
+      display: flex;
+      justify-content: space-around;
       margin-top: 10px;
-      text-align: center;
     }
   </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-storage-compat.js"></script>
 
   <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
@@ -120,14 +138,9 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
   />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-  <!-- Firebase (Realtime Database) -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
 </head>
-
 <body>
-  <!-- Report selector -->
+  <!-- report selector -->
   <div class="form-group">
     <label for="reportList">Select Report:</label>
     <select id="reportList">
@@ -148,28 +161,22 @@
     <div class="form-group">
       <label>Inspector Name:</label>
       <select id="inspector" required>
-        <option value="Arister Cruz">Arister Cruz</option>
-        <option value="Jorge Woicikoski">Jorge Woicikoski</option>
-        <option value="Pedro Ortiz">Pedro Ortiz</option>
+        <option>Arister Cruz</option>
+        <option>Jorge Woicikoski</option>
+        <option>Pedro Ortiz</option>
       </select>
     </div>
     <div class="form-group">
       <label>Roof Type:</label>
       <select id="roof-type" required>
-        <option value="TPO">TPO</option>
-        <option value="PVC">PVC</option>
-        <option value="Metal">Metal</option>
-        <option value="Modified">Modified</option>
-        <option value="Shingle">Shingle</option>
-        <option value="Other">Other</option>
+        <option>TPO</option><option>PVC</option><option>Metal</option>
+        <option>Modified</option><option>Shingle</option><option>Other</option>
       </select>
     </div>
     <div class="form-group">
       <label>Roof Condition:</label>
       <select id="roof-condition" required>
-        <option value="Good">Good</option>
-        <option value="Fair">Fair</option>
-        <option value="Poor">Poor</option>
+        <option>Good</option><option>Fair</option><option>Poor</option>
       </select>
     </div>
   </div>
@@ -186,21 +193,21 @@
     <button class="submit-btn" onclick="generatePDF()">Save &amp; Generate PDF</button>
   </div>
 
-  <!-- Cropping Modal -->
+  <!-- Crop Modal -->
   <div id="cropModal">
     <div class="modal-content">
       <span id="cropClose" class="modal-close">&times;</span>
-      <img id="cropImage" src="" alt="Crop Image" style="max-width:100%; display:block; margin:0 auto;">
+      <img id="cropImage" src="" alt="Crop">
       <div class="modal-buttons">
-        <button id="rotateLeft" type="button">Rotate Left</button>
-        <button id="rotateRight" type="button">Rotate Right</button>
-        <button id="cropConfirm" type="button">Crop</button>
+        <button id="rotateLeft">Rotate Left</button>
+        <button id="rotateRight">Rotate Right</button>
+        <button id="cropConfirm">Crop</button>
       </div>
     </div>
   </div>
 
   <script>
-    // ==== Firebase setup ====
+  // ===== Firebase init =====
 const firebaseConfig = {
   apiKey: "AIzaSyByxwR_TWiWYMe65G9AxBFgv-_oxX9MThk",
   authDomain: "fieldreport-1c1d2.firebaseapp.com",
@@ -210,301 +217,293 @@ const firebaseConfig = {
   appId: "1:752765269064:web:c31c85f245e0c29ba4947d",
   measurementId: "G-18DP7CSDW9"
 };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let loadedReportId = "";
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const storage = firebase.storage();
+  let loadedReportId = "";
 
-    // ==== Form utilities ====
-    function setDefaultDate() {
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
-    }
+  // ===== DOM refs =====
+  const reportList = document.getElementById('reportList');
+  const obsContainer = document.getElementById('observations-container');
+  const cropModal   = document.getElementById('cropModal');
+  const cropImage   = document.getElementById('cropImage');
+  const rotateLeft  = document.getElementById('rotateLeft');
+  const rotateRight = document.getElementById('rotateRight');
+  const cropConfirm = document.getElementById('cropConfirm');
+  const cropClose   = document.getElementById('cropClose');
+  let cropper, currentSection;
 
-    async function loadReports() {
-      const snap = await db.ref('reports').once('value');
-      const select = document.getElementById('reportList');
-      select.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
-      snap.forEach(child => {
-        const d = child.val();
-        const opt = document.createElement('option');
-        opt.value = child.key;
-        opt.text = `${d.date} — ${d.address}`;
-        select.appendChild(opt);
-      });
-    }
-
-    document.getElementById('reportList').addEventListener('change', async e => {
-      const id = e.target.value;
-      if (!id) {
-        resetForm();
-        loadedReportId = "";
-      } else {
-        const snap = await db.ref(`reports/${id}`).once('value');
-        const data = snap.val();
-        loadedReportId = id;
-        document.getElementById('address').value = data.address;
-        document.getElementById('inspector').value = data.inspector;
-        document.getElementById('roof-type').value = data.roofType;
-        document.getElementById('roof-condition').value = data.roofCondition;
-        document.getElementById('date').value = data.date;
-        // rebuild observations
-        const container = document.getElementById('observations-container');
-        container.innerHTML = "";
-        observationCount = 0;
-        data.observations.forEach(obs => {
-          addObservation();
-          const sec = container.querySelectorAll('.observation-section')[observationCount - 1];
-          sec.querySelector('.observation-desc').value = obs.desc;
-          sec.photosDataUrls = obs.photos || [];
-          // show previews
-          updatePreview(sec);
-        });
-      }
+  // ===== Setup =====
+  function setDefaultDate() {
+    const d = new Date();
+    document.getElementById('date').value =
+      `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  async function loadReports() {
+    const snap = await db.ref('reports').once('value');
+    reportList.querySelectorAll('option:not([value=""])').forEach(o=>o.remove());
+    snap.forEach(ch=>{
+      const opt = document.createElement('option');
+      opt.value = ch.key;
+      const d = ch.val();
+      opt.text = `${d.date} — ${d.address}`;
+      reportList.appendChild(opt);
     });
-
-    function resetForm() {
-      document.getElementById('address').value = "";
-      document.getElementById('inspector').selectedIndex = 0;
-      document.getElementById('roof-type').selectedIndex = 0;
-      document.getElementById('roof-condition').selectedIndex = 0;
-      setDefaultDate();
-      const container = document.getElementById('observations-container');
-      container.innerHTML = "";
-      observationCount = 0;
+  }
+  reportList.addEventListener('change', async ()=>{
+    const id = reportList.value;
+    if(!id) return resetForm();
+    const snap = await db.ref(`reports/${id}`).once('value');
+    const data = snap.val();
+    loadedReportId = id;
+    // populate fields
+    document.getElementById('address').value = data.address;
+    document.getElementById('inspector').value = data.inspector;
+    document.getElementById('roof-type').value = data.roofType;
+    document.getElementById('roof-condition').value = data.roofCondition;
+    document.getElementById('date').value = data.date;
+    // observations
+    obsContainer.innerHTML = '';
+    observationCount = 0;
+    data.observations.forEach(obs=>{
       addObservation();
-    }
-
-    // ==== Cropping logic ====
-    let currentSection, cropper;
-    function attachCropListener(input) {
-      input.addEventListener('change', e => {
-        const sec = e.target.closest('.observation-section');
-        sec.pendingFiles = Array.from(e.target.files);
-        sec.photosDataUrls = [];
-        e.target.value = "";
-        processNextCrop(sec);
-      });
-    }
-    function initCropping() {
-      document.querySelectorAll('.observation-photos').forEach(ip => attachCropListener(ip));
-    }
-    function processNextCrop(sec) {
-      if (!sec.pendingFiles.length) {
-        closeModal();
-        updatePreview(sec);
-        return;
-      }
-      currentSection = sec;
-      const file = sec.pendingFiles.shift();
-      const reader = new FileReader();
-      reader.onload = () => {
-        cropImage.src = reader.result;
-        openModal();
-      };
-      reader.readAsDataURL(file);
-    }
-    const cropModal = document.getElementById('cropModal');
-    const cropImage = document.getElementById('cropImage');
-    document.getElementById('cropClose').onclick = () => {
-      closeModal();
-      currentSection.pendingFiles = [];
-      updatePreview(currentSection);
-    };
-    function openModal() {
-      cropModal.style.display = "flex";
-      cropper = new Cropper(cropImage, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
-    }
-    function closeModal() {
-      cropper.destroy();
-      cropModal.style.display = "none";
-    }
-    document.getElementById('rotateLeft').onclick  = () => cropper.rotate(-90);
-    document.getElementById('rotateRight').onclick = () => cropper.rotate(90);
-    document.getElementById('cropConfirm').onclick = () => {
-      const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-      currentSection.photosDataUrls.push(dataUrl);
-      closeModal();
-      processNextCrop(currentSection);
-    };
-    function updatePreview(sec) {
-      sec.querySelectorAll('.photo-previews').forEach(el => el.remove());
-      if (sec.photosDataUrls && sec.photosDataUrls.length) {
-        const preview = document.createElement('div');
-        preview.className = 'photo-previews';
-        sec.photosDataUrls.forEach(url => {
-          const img = document.createElement('img');
-          img.src = url;
-          preview.appendChild(img);
-        });
-        sec.appendChild(preview);
-      }
-    }
-
-    // ==== Observations add/remove ====
-    let observationCount = 0;
-    function addObservation() {
-      const container = document.getElementById('observations-container');
-      const div = document.createElement('div');
-      div.className = 'form-group observation-section';
-      div.innerHTML = `
-        <label>Observation:</label>
-        <textarea class="observation-desc" required></textarea>
-        <label>Upload Photos for This Observation:</label>
-        <input type="file" class="observation-photos" multiple accept="image/*">
-        <div class="button-group">
-          <button type="button" class="remove-btn" onclick="removeObservation(this)">
-            Remove Observation
-          </button>
-        </div>
-      `;
-      container.appendChild(div);
-      observationCount++;
-      attachCropListener(div.querySelector('.observation-photos'));
-    }
-    function removeObservation(btn) {
-      if (observationCount > 1) {
-        btn.closest('.observation-section').remove();
-        observationCount--;
-      } else {
-        alert("At least one observation is required");
-      }
-    }
-
-    // ==== PDF generation & Firebase save ====
-    const { jsPDF } = window.jspdf;
-    async function generatePDF() {
-      try {
-        // gather data
-        const address = document.getElementById('address').value.trim();
-        const inspector = document.getElementById('inspector').value;
-        const roofType = document.getElementById('roof-type').value;
-        const roofCondition = document.getElementById('roof-condition').value;
-        const date = document.getElementById('date').value;
-
-        const doc = new jsPDF({ compress: true });
-        const w = doc.internal.pageSize.getWidth();
-        let y = 20;
-
-        // logo (original PNG)
-        try {
-          const logoObj = await loadLogoRaw();
-          const dw = 80;
-          const dh = (logoObj.height / logoObj.width) * dw;
-          doc.addImage(logoObj.element, 'PNG', (w - dw) / 2, y, dw, dh);
-          y += dh + 10;
-        } catch (e) {
-          console.warn("Logo load failed:", e);
-        }
-
-        // title
-        doc.setFontSize(18);
-        doc.setTextColor(19, 29, 53);
-        doc.text("Roof Inspection Report", w / 2, y, { align: 'center' });
-        y += 15;
-
-        // details
-        doc.setFontSize(12);
-        doc.setTextColor(0);
-        const details = [
-          `Property: ${address}`,
-          `Inspector: ${inspector}`,
-          `Date: ${date}`,
-          `Roof Type: ${roofType}`,
-          `Roof Condition: ${roofCondition}`
-        ];
-        details.forEach(line => {
-          if (y > 280) { doc.addPage(); y = 20; }
-          doc.text(line, 20, y);
-          y += 8;
-        });
-        y += 8;
-
-        // observations
-        const sections = document.querySelectorAll('.observation-section');
-        const savedObs = [];
-        const maxW = (w - 45) * 0.5;
-
-        sections.forEach((sec, i) => {
-          const desc = sec.querySelector('.observation-desc').value.trim();
-          const photos = sec.photosDataUrls || [];
-          savedObs.push({ desc, photos });
-
-          const textLines = doc.splitTextToSize(desc, w - 40);
-          const textH = textLines.length * 6 + 10;
-          const imgsH = Math.ceil(photos.length / 2) * (maxW + 5);
-
-          if (y + textH + imgsH > 280) { doc.addPage(); y = 20; }
-
-          doc.setFont('helvetica','bold');
-          doc.text(`Observation #${i+1}:`, 20, y);
-          y += 6;
-          doc.setFont('helvetica','normal');
-          textLines.forEach(line => { doc.text(line, 20, y); y += 6; });
-          y += 4;
-
-          let idx = 0;
-          while (idx < photos.length) {
-            if (y + maxW > 280) { doc.addPage(); y = 20; }
-            doc.addImage(photos[idx], 'JPEG', 20, y, maxW, maxW);
-            if (idx + 1 < photos.length) {
-              doc.addImage(photos[idx+1], 'JPEG', 20 + maxW + 5, y, maxW, maxW);
-            }
-            idx += 2;
-            y += maxW + 5;
-          }
-          y += 2;
-        });
-
-        const safeAddr = address.replace(/[^a-zA-Z0-9]/g, '_').substr(0,50);
-        const filename = `Inspection_Report_${safeAddr}_${date}.pdf`;
-        doc.save(filename);
-
-        // save to Firebase
-        const reportObj = {
-          address, inspector, roofType, roofCondition, date,
-          observations: savedObs,
-          updatedAt: Date.now()
-        };
-        if (loadedReportId) {
-          await db.ref(`reports/${loadedReportId}`).set(reportObj);
-        } else {
-          const newRef = db.ref('reports').push();
-          await newRef.set(reportObj);
-          loadedReportId = newRef.key;
-          const o = document.createElement('option');
-          o.value = loadedReportId;
-          o.text = `${date} — ${address}`;
-          document.getElementById('reportList').appendChild(o);
-          document.getElementById('reportList').value = loadedReportId;
-        }
-
-        alert("Report saved and PDF generated!");
-      } catch (err) {
-        console.error(err);
-        alert("Error: " + err.message);
-      }
-    }
-
-    function loadLogoRaw() {
-      return new Promise((res, rej) => {
-        const img = new Image();
-        img.onload = () => res({ element: img, width: img.naturalWidth, height: img.naturalHeight });
-        img.onerror = () => rej(new Error("Logo not found"));
-        img.src = 'Logo%20seal%20e%20slogan@2x.png';
-      });
-    }
-
-    // ==== Initialize on load ====
-    window.addEventListener('DOMContentLoaded', () => {
-      setDefaultDate();
-      loadReports();
-      initCropping();
-      addObservation(); // first observation
+      const sec = obsContainer.children[observationCount-1];
+      sec.querySelector('.observation-desc').value = obs.desc;
+      sec.photosDataUrls = obs.photos||[];
+      updatePreview(sec);
     });
+  });
+  function resetForm() {
+    loadedReportId = '';
+    ['address','inspector','roof-type','roof-condition'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el.tagName==='SELECT') el.selectedIndex=0;
+      else el.value='';
+    });
+    setDefaultDate();
+    obsContainer.innerHTML='';
+    observationCount=0;
+    addObservation();
+  }
+
+  // ===== Observations & cropping =====
+  let observationCount = 0;
+  function addObservation() {
+    const div = document.createElement('div');
+    div.className='form-group observation-section';
+    div.innerHTML=`
+      <label>Observation:</label>
+      <textarea class="observation-desc" required></textarea>
+      <label>Upload Photos:</label>
+      <input type="file" class="observation-photos" multiple accept="image/*">
+      <div class="button-group">
+        <button type="button" class="remove-btn">Remove Observation</button>
+      </div>`;
+    obsContainer.appendChild(div);
+    observationCount++;
+    // attach handlers
+    const removeBtn = div.querySelector('.remove-btn');
+    removeBtn.onclick = ()=> {
+      if(observationCount>1) {
+        div.remove();
+        observationCount--;
+      } else alert('At least one observation required');
+    };
+    const fileInput = div.querySelector('.observation-photos');
+    fileInput.onchange = e=>{
+      div.pendingFiles = Array.from(e.target.files);
+      div.photosDataUrls = [];
+      e.target.value='';
+      processNextCrop(div);
+    };
+  }
+
+  function processNextCrop(sec) {
+    if(!sec.pendingFiles.length) {
+      cropClose.click();
+      updatePreview(sec);
+      return;
+    }
+    currentSection = sec;
+    const file = sec.pendingFiles.shift();
+    const reader = new FileReader();
+    reader.onload = ()=> {
+      cropImage.src = reader.result;
+      openModal();
+    };
+    reader.readAsDataURL(file);
+  }
+  function openModal() {
+    cropModal.style.display='flex';
+    cropper = new Cropper(cropImage, {
+      aspectRatio: 1, viewMode:1, autoCropArea:1, responsive:true,
+    });
+  }
+  function closeModal() {
+    if(cropper) cropper.destroy();
+    cropModal.style.display='none';
+  }
+  rotateLeft.onclick  = ()=> cropper.rotate(-90);
+  rotateRight.onclick = ()=> cropper.rotate(90);
+  cropConfirm.onclick  = ()=>{
+    const canvas = cropper.getCroppedCanvas({ width:200, height:200 });
+    const url = canvas.toDataURL('image/jpeg',0.6);
+    currentSection.photosDataUrls.push(url);
+    closeModal();
+    processNextCrop(currentSection);
+  };
+  cropClose.onclick = ()=> {
+    if(currentSection) currentSection.pendingFiles=[];
+    closeModal();
+  };
+
+  function updatePreview(sec) {
+    sec.querySelectorAll('.photo-previews').forEach(e=>e.remove());
+    if(sec.photosDataUrls?.length) {
+      const p = document.createElement('div');
+      p.className='photo-previews';
+      sec.photosDataUrls.forEach(u=>{
+        const img = document.createElement('img');
+        img.src = u;
+        p.appendChild(img);
+      });
+      sec.appendChild(p);
+    }
+  }
+
+  // ===== PDF + Storage =====
+  const { jsPDF } = window.jspdf;
+  async function generatePDF() {
+    try {
+      // collect
+      const address = document.getElementById('address').value.trim();
+      const inspector = document.getElementById('inspector').value;
+      const roofType = document.getElementById('roof-type').value;
+      const roofCondition = document.getElementById('roof-condition').value;
+      const date = document.getElementById('date').value;
+
+      // ensure report ID
+      let ref;
+      if(loadedReportId) {
+        ref = db.ref(`reports/${loadedReportId}`);
+      } else {
+        ref = db.ref('reports').push();
+        loadedReportId = ref.key;
+        const o = document.createElement('option');
+        o.value = loadedReportId;
+        o.text = `${date} — ${address}`;
+        reportList.appendChild(o);
+        reportList.value = loadedReportId;
+      }
+
+      // build PDF
+      const doc = new jsPDF({ compress:true });
+      const w = doc.internal.pageSize.getWidth();
+      let y = 20;
+
+      // logo PNG color
+      try {
+        const imgEl = await new Promise((res,rej)=>{
+          const i = new Image();
+          i.onload = ()=>res(i);
+          i.onerror = ()=>rej();
+          i.src='Logo%20seal%20e%20slogan@2x.png';
+        });
+        const dw=80, dh=(imgEl.naturalHeight/imgEl.naturalWidth)*dw;
+        doc.addImage(imgEl,'PNG',(w-dw)/2,y,dw,dh);
+        y += dh+10;
+      } catch{}
+
+      // header
+      doc.setFontSize(18);
+      doc.setTextColor(19,29,53);
+      doc.text('Roof Inspection Report', w/2, y, { align:'center' });
+      y += 15;
+
+      // details
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      const lines = [
+        `Property: ${address}`,
+        `Inspector: ${inspector}`,
+        `Date: ${date}`,
+        `Roof Type: ${roofType}`,
+        `Roof Condition: ${roofCondition}`
+      ];
+      lines.forEach(l=>{
+        if(y>280){ doc.addPage(); y=20; }
+        doc.text(l,20,y);
+        y+=8;
+      });
+      y+=8;
+
+      // observations
+      const secs = [...document.querySelectorAll('.observation-section')];
+      const savedObs = [];
+      const imgW = (w-45)/2;
+      for(let i=0;i<secs.length;i++){
+        const sec=secs[i];
+        const desc = sec.querySelector('.observation-desc').value.trim();
+        const photos = sec.photosDataUrls||[];
+        savedObs.push({desc,photos});
+
+        // text
+        const txt = doc.splitTextToSize(desc, w-40);
+        const txtH = txt.length*6+10;
+        const imgsH = Math.ceil(photos.length/2)*(imgW+5);
+        if(y+txtH+imgsH>280){doc.addPage();y=20;}
+        doc.setFont('helvetica','bold');
+        doc.text(`Observation #${i+1}:`,20,y);
+        y+=6;
+        doc.setFont('helvetica','normal');
+        txt.forEach(l=>{doc.text(l,20,y);y+=6;});
+        y+=4;
+
+        // images
+        let idx=0;
+        while(idx<photos.length){
+          if(y+imgW>280){doc.addPage();y=20;}
+          doc.addImage(photos[idx],'JPEG',20,y,imgW,imgW);
+          if(photos[idx+1]){
+            doc.addImage(photos[idx+1],'JPEG',20+imgW+5,y,imgW,imgW);
+          }
+          idx+=2;
+          y+=imgW+5;
+        }
+        y+=2;
+      }
+
+      // output PDF & upload
+      const blob = doc.output('blob');
+      const filename = `Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
+      doc.save(filename);
+
+      // upload to Storage
+      const storageRef = storage.ref(`reports/${loadedReportId}/${filename}`);
+      await storageRef.put(blob, { contentType:'application/pdf' });
+      const downloadURL = await storageRef.getDownloadURL();
+
+      // save metadata
+      await ref.set({
+        address, inspector, roofType, roofCondition, date,
+        observations: savedObs,
+        pdfUrl: downloadURL,
+        updatedAt: Date.now()
+      });
+
+      alert('Report saved, PDF generated & uploaded!');
+    } catch(err) {
+      console.error(err);
+      alert('Error: '+err.message);
+    }
+  }
+
+  // ===== init on load =====
+  window.addEventListener('DOMContentLoaded', ()=>{
+    setDefaultDate();
+    loadReports();
+    addObservation();
+  });
   </script>
 </body>
 </html>
