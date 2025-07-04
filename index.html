@@ -245,7 +245,7 @@
         }
 
         function removeObservation(button) {
-            if(observationCount > 1) {
+            if (observationCount > 1) {
                 button.closest('.observation-section').remove();
                 observationCount--;
             } else {
@@ -255,32 +255,41 @@
 
         async function generatePDF() {
             try {
-                const doc = new jsPDF();
+                // Enable compression in the PDF
+                const doc = new jsPDF({ compress: true });
                 const pageWidth = doc.internal.pageSize.getWidth();
                 let yPos = 20;
 
+                // Load and embed the logo as medium-quality JPEG
                 try {
-                    const logo = await loadLogo();
-                    const logoWidth = 80;
-                    const logoHeight = (logo.naturalHeight / logo.naturalWidth) * logoWidth;
-                    doc.addImage(logo, 'PNG', (pageWidth - logoWidth) / 2, yPos, logoWidth, logoHeight);
-                    yPos += logoHeight + 10;
-                } catch(error) {
+                    const logoObj = await loadLogo();
+                    const logoDisplayWidth = 80;
+                    const logoDisplayHeight = (logoObj.height / logoObj.width) * logoDisplayWidth;
+                    doc.addImage(
+                        logoObj.dataUrl,
+                        'JPEG',
+                        (pageWidth - logoDisplayWidth) / 2,
+                        yPos,
+                        logoDisplayWidth,
+                        logoDisplayHeight
+                    );
+                    yPos += logoDisplayHeight + 10;
+                } catch (error) {
                     console.warn('Could not load logo:', error.message);
                 }
 
+                // Title
                 doc.setFontSize(18);
                 doc.setTextColor(19, 29, 53);
                 doc.text("Roof Inspection Report", pageWidth / 2, yPos, { align: 'center' });
                 yPos += 15;
 
+                // Details section
                 doc.setFontSize(12);
                 doc.setTextColor(0);
-                
                 const rawDate = document.getElementById('date').value;
                 const [year, month, day] = rawDate.split('-');
                 const formattedDate = `${month}/${day}/${year}`;
-
                 const details = [
                     `Property: ${document.getElementById('address').value}`,
                     `Inspector: ${document.getElementById('inspector').value}`,
@@ -288,122 +297,147 @@
                     `Roof Type: ${document.getElementById('roof-type').value}`,
                     `Roof Condition: ${document.getElementById('roof-condition').value}`
                 ];
-
                 details.forEach(line => {
-                    if(yPos > 280) {
+                    if (yPos > 280) {
                         doc.addPage();
                         yPos = 20;
                     }
                     doc.text(line, 20, yPos);
                     yPos += 8;
                 });
-
                 yPos += 8;
 
+                // Observations and photos
                 const observationSections = document.getElementsByClassName('observation-section');
-                for(let i = 0; i < observationSections.length; i++) {
-                    const observation = observationSections[i];
-                    const desc = observation.querySelector('.observation-desc').value;
-                    const photos = observation.querySelector('.observation-photos').files;
+                for (let i = 0; i < observationSections.length; i++) {
+                    const obs = observationSections[i];
+                    const desc = obs.querySelector('.observation-desc').value;
+                    const photos = obs.querySelector('.observation-photos').files;
 
+                    // Read and prep images at medium JPEG quality
                     const images = [];
-                    for(let j = 0; j < photos.length; j++) {
+                    for (let j = 0; j < photos.length; j++) {
                         const imgData = await readFile(photos[j]);
                         const imgProps = doc.getImageProperties(imgData);
                         const maxWidth = (pageWidth - 45) * 0.5;
-                        const scaleFactor = maxWidth / imgProps.width;
-                        const width = imgProps.width * scaleFactor;
-                        const height = imgProps.height * scaleFactor;
-                        images.push({ imgData, width, height });
+                        const scale = maxWidth / imgProps.width;
+                        images.push({
+                            imgData,
+                            width: imgProps.width * scale,
+                            height: imgProps.height * scale
+                        });
                     }
 
+                    // Measure text block
                     const splitText = doc.splitTextToSize(desc, pageWidth - 40);
                     const textHeight = splitText.length * 6 + 10;
-                    const imagesHeight = images.reduce((sum, img, index) => {
-                        if(index % 2 === 0) {
-                            const nextImg = images[index + 1];
-                            const pairHeight = Math.max(img.height, nextImg?.height || 0);
-                            return sum + pairHeight + 5;
+                    // Measure images block
+                    const imagesHeight = images.reduce((sum, img, idx) => {
+                        if (idx % 2 === 0) {
+                            const next = images[idx + 1];
+                            return sum + Math.max(img.height, next?.height || 0) + 5;
                         }
                         return sum;
                     }, 0);
-                    const totalHeight = textHeight + imagesHeight;
 
-                    if(yPos + totalHeight > 280) {
+                    // New page if needed
+                    if (yPos + textHeight + imagesHeight > 280) {
                         doc.addPage();
                         yPos = 20;
                     }
 
+                    // Observation header
                     doc.setFont('helvetica', 'bold');
-                    doc.text(`Observation #${i+1}:`, 20, yPos);
+                    doc.text(`Observation #${i + 1}:`, 20, yPos);
                     yPos += 6;
-                    
                     doc.setFont('helvetica', 'normal');
+
+                    // Observation text
                     splitText.forEach(line => {
                         doc.text(line, 20, yPos);
                         yPos += 6;
                     });
                     yPos += 4;
 
-                    let imgIndex = 0;
-                    while(imgIndex < images.length) {
-                        const img1 = images[imgIndex];
-                        const img2 = images[imgIndex + 1];
-                        const pairHeight = Math.max(img1.height, img2?.height || 0);
+                    // Place images
+                    let idx = 0;
+                    while (idx < images.length) {
+                        const img1 = images[idx];
+                        const img2 = images[idx + 1];
+                        const rowHeight = Math.max(img1.height, img2?.height || 0);
 
-                        if(yPos + pairHeight > 280) {
+                        if (yPos + rowHeight > 280) {
                             doc.addPage();
                             yPos = 20;
                         }
 
                         doc.addImage(img1.imgData, 'JPEG', 20, yPos, img1.width, img1.height);
-
-                        if(img2) {
-                            const x2 = 20 + img1.width + 5;
-                            doc.addImage(img2.imgData, 'JPEG', x2, yPos, img2.width, img2.height);
-                            imgIndex += 2;
+                        if (img2) {
+                            doc.addImage(
+                                img2.imgData,
+                                'JPEG',
+                                20 + img1.width + 5,
+                                yPos,
+                                img2.width,
+                                img2.height
+                            );
+                            idx += 2;
                         } else {
-                            imgIndex += 1;
+                            idx += 1;
                         }
-
-                        yPos += pairHeight + 5;
+                        yPos += rowHeight + 5;
                     }
                     yPos += 2;
                 }
 
-                const address = document.getElementById('address').value
+                // Filename based on address & date
+                const safeAddr = document.getElementById('address').value
                     .replace(/[^a-zA-Z0-9]/g, '_')
                     .substring(0, 50);
-                const date = document.getElementById('date').value;
-                const filename = `Inspection_Report_${address}_${date}.pdf`;
-
+                const filename = `Inspection_Report_${safeAddr}_${rawDate}.pdf`;
                 doc.save(filename);
-            } catch (error) {
-                alert(`Error generating PDF: ${error.message}`);
+
+            } catch (err) {
+                alert(`Error generating PDF: ${err.message}`);
             }
         }
 
+        // Load logo and convert to medium-quality JPEG
         function loadLogo() {
             return new Promise((resolve, reject) => {
                 const img = new Image();
-                img.onload = () => resolve(img);
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                    resolve({
+                        dataUrl,
+                        width: img.naturalWidth,
+                        height: img.naturalHeight
+                    });
+                };
                 img.onerror = () => reject(new Error('Logo not found'));
                 img.src = 'Logo%20seal%20e%20slogan@2x.png';
             });
         }
 
+        // Read a File and return a medium-quality JPEG DataURL
         function readFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    EXIF.getData(file, function() {
+                    EXIF.getData(file, function () {
                         const orientation = EXIF.getTag(this, 'Orientation') || 1;
                         const img = new Image();
                         img.onload = () => {
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
 
-                            if ([5,6,7,8].includes(orientation)) {
+                            // handle orientation
+                            if ([5, 6, 7, 8].includes(orientation)) {
                                 canvas.width = img.height;
                                 canvas.height = img.width;
                             } else {
@@ -412,7 +446,7 @@
                             }
 
                             ctx.save();
-                            switch(orientation) {
+                            switch (orientation) {
                                 case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
                                 case 3: ctx.transform(-1, 0, 0, -1, img.width, img.height); break;
                                 case 4: ctx.transform(1, 0, 0, -1, 0, img.height); break;
@@ -422,10 +456,11 @@
                                 case 8: ctx.transform(0, -1, 1, 0, 0, img.width); break;
                                 default: break;
                             }
-
                             ctx.drawImage(img, 0, 0);
                             ctx.restore();
-                            resolve(canvas.toDataURL('image/jpeg'));
+
+                            // medium-quality JPEG
+                            resolve(canvas.toDataURL('image/jpeg', 0.6));
                         };
                         img.src = e.target.result;
                     });
