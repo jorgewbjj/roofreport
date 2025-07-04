@@ -395,7 +395,7 @@
   cropConfirm.onclick = () => {
     // medium-quality: 70% JPEG
     const canvas = cropper.getCroppedCanvas({ width:300, height:300 });
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
     currentSection.photosDataUrls.push(dataUrl);
     closeModal();
     processNextCrop(currentSection);
