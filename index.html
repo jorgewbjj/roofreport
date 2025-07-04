@@ -1,474 +1,489 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SEAL TOP ROOF - Inspection Report</title>
-    <style>
-        :root {
-            --primary-color: #007bff;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --text-color: #2c3e50;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SEAL TOP ROOF - Inspection Report</title>
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --success-color: #28a745;
+      --danger-color: #dc3545;
+      --text-color: #2c3e50;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      color: var(--text-color);
+      font-size: 16px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 15px;
+      padding: 15px 0;
+      background: #f8f9fa;
+      border-radius: 10px;
+    }
+    .logo {
+      height: 60px;
+      margin-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background: white;
+    }
+    .top-details {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    button {
+      padding: 14px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      flex: 1;
+      min-width: 120px;
+      transition: opacity 0.2s;
+    }
+    button:active { opacity: 0.8; }
+    .add-btn { background-color: var(--success-color); color: white; }
+    .remove-btn { background-color: var(--danger-color); color: white; }
+    .submit-btn { background-color: var(--primary-color); color: white; }
+    @media (min-width: 768px) {
+      body { max-width: 800px; margin: 0 auto; padding: 20px; }
+      .logo { height: 80px; }
+      button { flex: none; }
+      .submit-btn { float: right; }
+    }
+    @media (max-width: 480px) {
+      .top-details { grid-template-columns: 1fr; }
+      .form-group { padding: 12px; }
+      button { width: 100%; }
+    }
+    .photo-previews img {
+      max-width: 80px;
+      margin: 2px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
 
-        * {
-            box-sizing: border-box;
-        }
+  <!-- JS libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 15px;
-            color: var(--text-color);
-            font-size: 16px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 15px;
-            padding: 15px 0;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-
-        .logo {
-            height: 60px;
-            margin-bottom: 10px;
-        }
-
-        .top-details {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            background: white;
-        }
-
-        .top-details .form-group {
-            margin-bottom: 0;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ced4da;
-            border-radius: 6px;
-            font-size: 16px;
-            margin-bottom: 12px;
-            -webkit-appearance: none;
-        }
-
-        textarea {
-            min-height: 100px;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-
-        button {
-            padding: 14px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            flex: 1;
-            min-width: 120px;
-            transition: opacity 0.2s;
-        }
-
-        button:active {
-            opacity: 0.8;
-        }
-
-        .add-btn {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .remove-btn {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .submit-btn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        @media (min-width: 768px) {
-            body {
-                max-width: 800px;
-                margin: 0 auto;
-                padding: 20px;
-            }
-
-            .logo {
-                height: 80px;
-            }
-
-            button {
-                flex: none;
-            }
-
-            .submit-btn {
-                float: right;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .top-details {
-                grid-template-columns: 1fr;
-            }
-
-            .form-group {
-                padding: 12px;
-            }
-
-            button {
-                width: 100%;
-            }
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+  <!-- Firebase (Realtime Database) -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
 </head>
+
 <body onload="setDefaultDate()">
-    <div class="header">
-        <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
-        <h1>Roof Inspection Report</h1>
-    </div>
+  <!-- Report selector -->
+  <div class="form-group">
+    <label for="reportList">Select Report:</label>
+    <select id="reportList">
+      <option value="">New Report</option>
+    </select>
+  </div>
 
-    <div class="top-details">
-        <div class="form-group">
-            <label>Property:</label>
-            <input type="text" id="address" required>
-        </div>
+  <div class="header">
+    <img src="Logo%20seal%20e%20slogan@2x.png" class="logo" alt="SEAL TOP ROOF Logo">
+    <h1>Roof Inspection Report</h1>
+  </div>
 
-        <div class="form-group">
-            <label>Inspector Name:</label>
-            <select id="inspector" required>
-                <option value="Arister Cruz">Arister Cruz</option>
-                <option value="Jorge Woicikoski">Jorge Woicikoski</option>
-                <option value="Pedro Ortiz">Pedro Ortiz</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Roof Type:</label>
-            <select id="roof-type" required>
-                <option value="TPO">TPO</option>
-                <option value="PVC">PVC</option>
-                <option value="Metal">Metal</option>
-                <option value="Modified">Modified</option>
-                <option value="Shingle">Shingle</option>
-                <option value="Other">Other</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Roof Condition:</label>
-            <select id="roof-condition" required>
-                <option value="Good">Good</option>
-                <option value="Fair">Fair</option>
-                <option value="Poor">Poor</option>
-            </select>
-        </div>
-    </div>
-
+  <div class="top-details">
     <div class="form-group">
-        <label>Inspection Date:</label>
-        <input type="date" id="date" required>
+      <label>Property:</label>
+      <input type="text" id="address" required>
     </div>
+    <div class="form-group">
+      <label>Inspector Name:</label>
+      <select id="inspector" required>
+        <option value="Arister Cruz">Arister Cruz</option>
+        <option value="Jorge Woicikoski">Jorge Woicikoski</option>
+        <option value="Pedro Ortiz">Pedro Ortiz</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Roof Type:</label>
+      <select id="roof-type" required>
+        <option value="TPO">TPO</option>
+        <option value="PVC">PVC</option>
+        <option value="Metal">Metal</option>
+        <option value="Modified">Modified</option>
+        <option value="Shingle">Shingle</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Roof Condition:</label>
+      <select id="roof-condition" required>
+        <option value="Good">Good</option>
+        <option value="Fair">Fair</option>
+        <option value="Poor">Poor</option>
+      </select>
+    </div>
+  </div>
 
-    <div id="observations-container">
-        <div class="form-group observation-section">
-            <label>Observation:</label>
-            <textarea class="observation-desc" required></textarea>
-            <label>Upload Photos for This Observation:</label>
-            <input type="file" class="observation-photos" multiple accept="image/*">
-            <div class="button-group">
-                <button type="button" class="remove-btn" onclick="removeObservation(this)">Remove Observation</button>
-            </div>
+  <div class="form-group">
+    <label>Inspection Date:</label>
+    <input type="date" id="date" required>
+  </div>
+
+  <div id="observations-container">
+    <div class="form-group observation-section">
+      <label>Observation:</label>
+      <textarea class="observation-desc" required></textarea>
+      <label>Upload Photos for This Observation:</label>
+      <input type="file" class="observation-photos" multiple accept="image/*">
+      <div class="button-group">
+        <button type="button" class="remove-btn"
+                onclick="removeObservation(this)">Remove Observation</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="button-group">
+    <button class="add-btn" onclick="addObservation()">Add Observation</button>
+    <button class="submit-btn" onclick="generatePDF()">Save &amp; Generate PDF</button>
+  </div>
+
+  <script>
+    // ==== Firebase setup ====
+    // TODO: replace these placeholders with your Firebase project's config
+  const firebaseConfig = {
+  apiKey: "AIzaSyByxwR_TWiWYMe65G9AxBFgv-_oxX9MThk",
+  authDomain: "fieldreport-1c1d2.firebaseapp.com",
+  projectId: "fieldreport-1c1d2",
+  storageBucket: "fieldreport-1c1d2.firebasestorage.app",
+  messagingSenderId: "752765269064",
+  appId: "1:752765269064:web:c31c85f245e0c29ba4947d",
+  measurementId: "G-18DP7CSDW9"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    let loadedReportId = "";
+
+    // ==== Utility functions ====
+    function setDefaultDate() {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+      loadReports();
+    }
+
+    // Load existing reports into the selector
+    function loadReports() {
+      db.ref('reports').once('value').then(snapshot => {
+        const select = document.getElementById('reportList');
+        // clear existing (except "New Report")
+        select.querySelectorAll('option:not([value=""])').forEach(opt => opt.remove());
+        snapshot.forEach(child => {
+          const data = child.val();
+          const opt = document.createElement('option');
+          opt.value = child.key;
+          opt.text = `${data.date} — ${data.address}`;
+          select.appendChild(opt);
+        });
+      });
+    }
+
+    document.getElementById('reportList')
+            .addEventListener('change', e => {
+      const id = e.target.value;
+      if (!id) {
+        resetForm();
+        loadedReportId = "";
+      } else {
+        loadReport(id);
+      }
+    });
+
+    function resetForm() {
+      document.getElementById('address').value = '';
+      document.getElementById('inspector').selectedIndex = 0;
+      document.getElementById('roof-type').selectedIndex = 0;
+      document.getElementById('roof-condition').selectedIndex = 0;
+      setDefaultDate();
+      const container = document.getElementById('observations-container');
+      container.innerHTML = '';
+      observationCount = 0;
+      addObservation();
+    }
+
+    // Load a report from Firebase and populate form
+    async function loadReport(id) {
+      const snap = await db.ref(`reports/${id}`).once('value');
+      const data = snap.val();
+      loadedReportId = id;
+      document.getElementById('address').value = data.address;
+      document.getElementById('inspector').value = data.inspector;
+      document.getElementById('roof-type').value = data.roofType;
+      document.getElementById('roof-condition').value = data.roofCondition;
+      document.getElementById('date').value = data.date;
+
+      // rebuild observations
+      const container = document.getElementById('observations-container');
+      container.innerHTML = '';
+      observationCount = 0;
+      data.observations.forEach(obs => {
+        addObservation();
+        const sec = container.querySelectorAll('.observation-section')[observationCount-1];
+        sec.querySelector('.observation-desc').value = obs.desc;
+        // store previous photos' dataUrls
+        sec.photosDataUrls = obs.photos || [];
+        // show thumbnails
+        const preview = document.createElement('div');
+        preview.className = 'photo-previews';
+        obs.photos.forEach(url => {
+          const img = document.createElement('img');
+          img.src = url;
+          preview.appendChild(img);
+        });
+        sec.appendChild(preview);
+      });
+    }
+
+    // ==== Observation add/remove ====
+    let observationCount = 0;
+    function addObservation() {
+      const container = document.getElementById('observations-container');
+      const div = document.createElement('div');
+      div.className = 'form-group observation-section';
+      div.innerHTML = `
+        <label>Observation:</label>
+        <textarea class="observation-desc" required></textarea>
+        <label>Upload Photos for This Observation:</label>
+        <input type="file" class="observation-photos" multiple accept="image/*">
+        <div class="button-group">
+          <button type="button" class="remove-btn"
+                  onclick="removeObservation(this)">Remove Observation</button>
         </div>
-    </div>
+      `;
+      container.appendChild(div);
+      observationCount++;
+    }
 
-    <div class="button-group">
-        <button class="add-btn" onclick="addObservation()">Add Observation</button>
-        <button class="submit-btn" onclick="generatePDF()">Generate Report</button>
-    </div>
+    function removeObservation(btn) {
+      if (observationCount > 1) {
+        btn.closest('.observation-section').remove();
+        observationCount--;
+      } else {
+        alert("At least one observation is required");
+      }
+    }
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script>
-        function setDefaultDate() {
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
+    // ==== PDF generation & Firebase save ====
+    const { jsPDF } = window.jspdf;
+
+    async function generatePDF() {
+      try {
+        // 1) collect form data
+        const address = document.getElementById('address').value.trim();
+        const inspector = document.getElementById('inspector').value;
+        const roofType = document.getElementById('roof-type').value;
+        const roofCondition = document.getElementById('roof-condition').value;
+        const date = document.getElementById('date').value;
+
+        // 2) prepare jsPDF
+        const doc = new jsPDF({ compress: true });
+        const w = doc.internal.pageSize.getWidth();
+        let y = 20;
+
+        // 3) add logo as original PNG to preserve color
+        try {
+          const logoImg = await loadLogoRaw();
+          const displayW = 80;
+          const displayH = (logoImg.height / logoImg.width) * displayW;
+          doc.addImage(logoImg.element, 'PNG', (w - displayW) / 2, y, displayW, displayH);
+          y += displayH + 10;
+        } catch (e) {
+          console.warn("Logo load failed:", e);
         }
 
-        const { jsPDF } = window.jspdf;
-        let observationCount = 1;
+        // 4) header
+        doc.setFontSize(18);
+        doc.setTextColor(19,29,53);
+        doc.text("Roof Inspection Report", w/2, y, { align: 'center' });
+        y += 15;
 
-        function addObservation() {
-            const container = document.getElementById('observations-container');
-            const newObservation = document.createElement('div');
-            newObservation.className = 'form-group observation-section';
-            newObservation.innerHTML = `
-                <label>Observation:</label>
-                <textarea class="observation-desc" required></textarea>
-                <label>Upload Photos for This Observation:</label>
-                <input type="file" class="observation-photos" multiple accept="image/*">
-                <div class="button-group">
-                    <button type="button" class="remove-btn" onclick="removeObservation(this)">Remove Observation</button>
-                </div>
-            `;
-            container.appendChild(newObservation);
-            observationCount++;
-        }
+        // 5) details
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        const details = [
+          `Property: ${address}`,
+          `Inspector: ${inspector}`,
+          `Date: ${date}`,
+          `Roof Type: ${roofType}`,
+          `Roof Condition: ${roofCondition}`
+        ];
+        details.forEach(line => {
+          if (y > 280) { doc.addPage(); y = 20; }
+          doc.text(line, 20, y);
+          y += 8;
+        });
+        y += 8;
 
-        function removeObservation(button) {
-            if (observationCount > 1) {
-                button.closest('.observation-section').remove();
-                observationCount--;
-            } else {
-                alert("At least one observation is required");
+        // 6) observations
+        const obsSecs = document.querySelectorAll('.observation-section');
+        const savedObservations = [];
+        for (let i = 0; i < obsSecs.length; i++) {
+          const sec = obsSecs[i];
+          const desc = sec.querySelector('.observation-desc').value.trim();
+
+          // gather images: either newly uploaded or from previous dataUrls
+          let rawPhotos = [];
+          const files = sec.querySelector('.observation-photos').files;
+          if (files.length > 0) {
+            for (let f of files) {
+              rawPhotos.push(await readFileAsJpeg(f));
             }
-        }
+          } else if (sec.photosDataUrls) {
+            rawPhotos = sec.photosDataUrls;
+          }
 
-        async function generatePDF() {
-            try {
-                // Enable compression in the PDF
-                const doc = new jsPDF({ compress: true });
-                const pageWidth = doc.internal.pageSize.getWidth();
-                let yPos = 20;
+          // save for Firebase
+          savedObservations.push({ desc, photos: rawPhotos });
 
-                // Load and embed the logo as medium-quality JPEG
-                try {
-                    const logoObj = await loadLogo();
-                    const logoDisplayWidth = 80;
-                    const logoDisplayHeight = (logoObj.height / logoObj.width) * logoDisplayWidth;
-                    doc.addImage(
-                        logoObj.dataUrl,
-                        'JPEG',
-                        (pageWidth - logoDisplayWidth) / 2,
-                        yPos,
-                        logoDisplayWidth,
-                        logoDisplayHeight
-                    );
-                    yPos += logoDisplayHeight + 10;
-                } catch (error) {
-                    console.warn('Could not load logo:', error.message);
-                }
-
-                // Title
-                doc.setFontSize(18);
-                doc.setTextColor(19, 29, 53);
-                doc.text("Roof Inspection Report", pageWidth / 2, yPos, { align: 'center' });
-                yPos += 15;
-
-                // Details section
-                doc.setFontSize(12);
-                doc.setTextColor(0);
-                const rawDate = document.getElementById('date').value;
-                const [year, month, day] = rawDate.split('-');
-                const formattedDate = `${month}/${day}/${year}`;
-                const details = [
-                    `Property: ${document.getElementById('address').value}`,
-                    `Inspector: ${document.getElementById('inspector').value}`,
-                    `Inspection Date: ${formattedDate}`,
-                    `Roof Type: ${document.getElementById('roof-type').value}`,
-                    `Roof Condition: ${document.getElementById('roof-condition').value}`
-                ];
-                details.forEach(line => {
-                    if (yPos > 280) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-                    doc.text(line, 20, yPos);
-                    yPos += 8;
-                });
-                yPos += 8;
-
-                // Observations and photos
-                const observationSections = document.getElementsByClassName('observation-section');
-                for (let i = 0; i < observationSections.length; i++) {
-                    const obs = observationSections[i];
-                    const desc = obs.querySelector('.observation-desc').value;
-                    const photos = obs.querySelector('.observation-photos').files;
-
-                    // Read and prep images at medium JPEG quality
-                    const images = [];
-                    for (let j = 0; j < photos.length; j++) {
-                        const imgData = await readFile(photos[j]);
-                        const imgProps = doc.getImageProperties(imgData);
-                        const maxWidth = (pageWidth - 45) * 0.5;
-                        const scale = maxWidth / imgProps.width;
-                        images.push({
-                            imgData,
-                            width: imgProps.width * scale,
-                            height: imgProps.height * scale
-                        });
-                    }
-
-                    // Measure text block
-                    const splitText = doc.splitTextToSize(desc, pageWidth - 40);
-                    const textHeight = splitText.length * 6 + 10;
-                    // Measure images block
-                    const imagesHeight = images.reduce((sum, img, idx) => {
-                        if (idx % 2 === 0) {
-                            const next = images[idx + 1];
-                            return sum + Math.max(img.height, next?.height || 0) + 5;
-                        }
-                        return sum;
-                    }, 0);
-
-                    // New page if needed
-                    if (yPos + textHeight + imagesHeight > 280) {
-                        doc.addPage();
-                        yPos = 20;
-                    }
-
-                    // Observation header
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(`Observation #${i + 1}:`, 20, yPos);
-                    yPos += 6;
-                    doc.setFont('helvetica', 'normal');
-
-                    // Observation text
-                    splitText.forEach(line => {
-                        doc.text(line, 20, yPos);
-                        yPos += 6;
-                    });
-                    yPos += 4;
-
-                    // Place images
-                    let idx = 0;
-                    while (idx < images.length) {
-                        const img1 = images[idx];
-                        const img2 = images[idx + 1];
-                        const rowHeight = Math.max(img1.height, img2?.height || 0);
-
-                        if (yPos + rowHeight > 280) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-
-                        doc.addImage(img1.imgData, 'JPEG', 20, yPos, img1.width, img1.height);
-                        if (img2) {
-                            doc.addImage(
-                                img2.imgData,
-                                'JPEG',
-                                20 + img1.width + 5,
-                                yPos,
-                                img2.width,
-                                img2.height
-                            );
-                            idx += 2;
-                        } else {
-                            idx += 1;
-                        }
-                        yPos += rowHeight + 5;
-                    }
-                    yPos += 2;
-                }
-
-                // Filename based on address & date
-                const safeAddr = document.getElementById('address').value
-                    .replace(/[^a-zA-Z0-9]/g, '_')
-                    .substring(0, 50);
-                const filename = `Inspection_Report_${safeAddr}_${rawDate}.pdf`;
-                doc.save(filename);
-
-            } catch (err) {
-                alert(`Error generating PDF: ${err.message}`);
+          // print to PDF
+          const textLines = doc.splitTextToSize(desc, w - 40);
+          const textH = textLines.length * 6 + 10;
+          const imgObjs = rawPhotos.map(dataUrl => {
+            const props = doc.getImageProperties(dataUrl);
+            const maxW = (w - 45) * 0.5;
+            const scale = maxW / props.width;
+            return { dataUrl, width: props.width * scale, height: props.height * scale };
+          });
+          const imgsH = imgObjs.reduce((sum, img, idx) => {
+            if (idx % 2 === 0) {
+              const next = imgObjs[idx+1];
+              return sum + Math.max(img.height, next?.height||0) + 5;
             }
+            return sum;
+          }, 0);
+
+          if (y + textH + imgsH > 280) { doc.addPage(); y = 20; }
+
+          doc.setFont('helvetica','bold');
+          doc.text(`Observation #${i+1}:`, 20, y);
+          y += 6;
+          doc.setFont('helvetica','normal');
+          textLines.forEach(line => { doc.text(line, 20, y); y += 6; });
+          y += 4;
+
+          let idx = 0;
+          while (idx < imgObjs.length) {
+            const img1 = imgObjs[idx], img2 = imgObjs[idx+1];
+            const rowH = Math.max(img1.height, img2?.height||0);
+            if (y + rowH > 280) { doc.addPage(); y = 20; }
+            doc.addImage(img1.dataUrl, 'JPEG', 20, y, img1.width, img1.height);
+            if (img2) {
+              doc.addImage(img2.dataUrl, 'JPEG', 20 + img1.width + 5, y, img2.width, img2.height);
+              idx += 2;
+            } else { idx += 1; }
+            y += rowH + 5;
+          }
+          y += 2;
         }
 
-        // Load logo and convert to medium-quality JPEG
-        function loadLogo() {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.naturalWidth;
-                    canvas.height = img.naturalHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
-                    resolve({
-                        dataUrl,
-                        width: img.naturalWidth,
-                        height: img.naturalHeight
-                    });
-                };
-                img.onerror = () => reject(new Error('Logo not found'));
-                img.src = 'Logo%20seal%20e%20slogan@2x.png';
-            });
+        // 7) save PDF
+        const safeAddr = address.replace(/[^a-zA-Z0-9]/g,'_').substr(0,50);
+        const filename = `Inspection_Report_${safeAddr}_${date}.pdf`;
+        doc.save(filename);
+
+        // 8) save to Firebase
+        const reportObj = {
+          address, inspector, roofType, roofCondition, date,
+          observations: savedObservations,
+          updatedAt: Date.now()
+        };
+        if (loadedReportId) {
+          await db.ref(`reports/${loadedReportId}`).set(reportObj);
+        } else {
+          const newRef = db.ref('reports').push();
+          await newRef.set(reportObj);
+          loadedReportId = newRef.key;
+          // add to dropdown
+          const opt = document.createElement('option');
+          opt.value = loadedReportId;
+          opt.text = `${date} — ${address}`;
+          document.getElementById('reportList').appendChild(opt);
+          document.getElementById('reportList').value = loadedReportId;
         }
+        alert("Report saved and PDF generated!");
 
-        // Read a File and return a medium-quality JPEG DataURL
-        function readFile(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    EXIF.getData(file, function () {
-                        const orientation = EXIF.getTag(this, 'Orientation') || 1;
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
+      } catch (err) {
+        console.error(err);
+        alert("Error: " + err.message);
+      }
+    }
 
-                            // handle orientation
-                            if ([5, 6, 7, 8].includes(orientation)) {
-                                canvas.width = img.height;
-                                canvas.height = img.width;
-                            } else {
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                            }
+    // Load logo as raw PNG to preserve color
+    function loadLogoRaw() {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve({ element: img, width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => reject(new Error("Logo not found"));
+        img.src = 'Logo%20seal%20e%20slogan@2x.png';
+      });
+    }
 
-                            ctx.save();
-                            switch (orientation) {
-                                case 2: ctx.transform(-1, 0, 0, 1, img.width, 0); break;
-                                case 3: ctx.transform(-1, 0, 0, -1, img.width, img.height); break;
-                                case 4: ctx.transform(1, 0, 0, -1, 0, img.height); break;
-                                case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
-                                case 6: ctx.transform(0, 1, -1, 0, img.height, 0); break;
-                                case 7: ctx.transform(0, -1, -1, 0, img.height, img.width); break;
-                                case 8: ctx.transform(0, -1, 1, 0, 0, img.width); break;
-                                default: break;
-                            }
-                            ctx.drawImage(img, 0, 0);
-                            ctx.restore();
-
-                            // medium-quality JPEG
-                            resolve(canvas.toDataURL('image/jpeg', 0.6));
-                        };
-                        img.src = e.target.result;
-                    });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-    </script>
+    // Read file & return a medium-quality JPEG dataUrl
+    function readFileAsJpeg(file) {
+      return new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          EXIF.getData(file, function() {
+            const orient = EXIF.getTag(this,'Orientation') || 1;
+            const img = new Image();
+            img.onload = () => {
+              const c = document.createElement('canvas');
+              const ctx = c.getContext('2d');
+              // set canvas dims based on orientation
+              if ([5,6,7,8].includes(orient)) {
+                c.width = img.height; c.height = img.width;
+              } else {
+                c.width = img.width; c.height = img.height;
+              }
+              // apply orientation transforms
+              ctx.save();
+              switch(orient) {
+                case 2: ctx.transform(-1,0,0,1,img.width,0); break;
+                case 3: ctx.transform(-1,0,0,-1,img.width,img.height); break;
+                case 4: ctx.transform(1,0,0,-1,0,img.height); break;
+                case 5: ctx.transform(0,1,1,0,0,0); break;
+                case 6: ctx.transform(0,1,-1,0,img.height,0); break;
+                case 7: ctx.transform(0,-1,-1,0,img.height,img.width); break;
+                case 8: ctx.transform(0,-1,1,0,0,img.width); break;
+              }
+              ctx.drawImage(img,0,0);
+              ctx.restore();
+              res(c.toDataURL('image/jpeg',0.6));
+            };
+            img.src = e.target.result;
+          });
+        };
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+    }
+  </script>
 </body>
 </html>
