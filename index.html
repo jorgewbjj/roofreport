@@ -81,18 +81,52 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+    /* Cropper modal */
+    #cropModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #cropModal .modal-content {
+      background: white;
+      padding: 20px;
+      position: relative;
+      max-width: 90%;
+      max-height: 90%;
+      overflow: auto;
+    }
+    #cropModal .modal-close {
+      position: absolute;
+      top: 10px; right: 10px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+    #cropModal .modal-buttons {
+      margin-top: 10px;
+      text-align: center;
+    }
   </style>
 
-  <!-- JS libraries -->
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
+  />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
   <!-- Firebase (Realtime Database) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
 </head>
 
-<body onload="setDefaultDate()">
+<body>
   <!-- Report selector -->
   <div class="form-group">
     <label for="reportList">Select Report:</label>
@@ -145,28 +179,29 @@
     <input type="date" id="date" required>
   </div>
 
-  <div id="observations-container">
-    <div class="form-group observation-section">
-      <label>Observation:</label>
-      <textarea class="observation-desc" required></textarea>
-      <label>Upload Photos for This Observation:</label>
-      <input type="file" class="observation-photos" multiple accept="image/*">
-      <div class="button-group">
-        <button type="button" class="remove-btn"
-                onclick="removeObservation(this)">Remove Observation</button>
-      </div>
-    </div>
-  </div>
+  <div id="observations-container"></div>
 
   <div class="button-group">
     <button class="add-btn" onclick="addObservation()">Add Observation</button>
     <button class="submit-btn" onclick="generatePDF()">Save &amp; Generate PDF</button>
   </div>
 
+  <!-- Cropping Modal -->
+  <div id="cropModal">
+    <div class="modal-content">
+      <span id="cropClose" class="modal-close">&times;</span>
+      <img id="cropImage" src="" alt="Crop Image" style="max-width:100%; display:block; margin:0 auto;">
+      <div class="modal-buttons">
+        <button id="rotateLeft" type="button">Rotate Left</button>
+        <button id="rotateRight" type="button">Rotate Right</button>
+        <button id="cropConfirm" type="button">Crop</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==== Firebase setup ====
-    // TODO: replace these placeholders with your Firebase project's config
-  const firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyByxwR_TWiWYMe65G9AxBFgv-_oxX9MThk",
   authDomain: "fieldreport-1c1d2.firebaseapp.com",
   projectId: "fieldreport-1c1d2",
@@ -179,89 +214,137 @@
     const db = firebase.database();
     let loadedReportId = "";
 
-    // ==== Utility functions ====
+    // ==== Form utilities ====
     function setDefaultDate() {
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
       document.getElementById('date').value = `${yyyy}-${mm}-${dd}`;
-      loadReports();
     }
 
-    // Load existing reports into the selector
-    function loadReports() {
-      db.ref('reports').once('value').then(snapshot => {
-        const select = document.getElementById('reportList');
-        // clear existing (except "New Report")
-        select.querySelectorAll('option:not([value=""])').forEach(opt => opt.remove());
-        snapshot.forEach(child => {
-          const data = child.val();
-          const opt = document.createElement('option');
-          opt.value = child.key;
-          opt.text = `${data.date} — ${data.address}`;
-          select.appendChild(opt);
-        });
+    async function loadReports() {
+      const snap = await db.ref('reports').once('value');
+      const select = document.getElementById('reportList');
+      select.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+      snap.forEach(child => {
+        const d = child.val();
+        const opt = document.createElement('option');
+        opt.value = child.key;
+        opt.text = `${d.date} — ${d.address}`;
+        select.appendChild(opt);
       });
     }
 
-    document.getElementById('reportList')
-            .addEventListener('change', e => {
+    document.getElementById('reportList').addEventListener('change', async e => {
       const id = e.target.value;
       if (!id) {
         resetForm();
         loadedReportId = "";
       } else {
-        loadReport(id);
+        const snap = await db.ref(`reports/${id}`).once('value');
+        const data = snap.val();
+        loadedReportId = id;
+        document.getElementById('address').value = data.address;
+        document.getElementById('inspector').value = data.inspector;
+        document.getElementById('roof-type').value = data.roofType;
+        document.getElementById('roof-condition').value = data.roofCondition;
+        document.getElementById('date').value = data.date;
+        // rebuild observations
+        const container = document.getElementById('observations-container');
+        container.innerHTML = "";
+        observationCount = 0;
+        data.observations.forEach(obs => {
+          addObservation();
+          const sec = container.querySelectorAll('.observation-section')[observationCount - 1];
+          sec.querySelector('.observation-desc').value = obs.desc;
+          sec.photosDataUrls = obs.photos || [];
+          // show previews
+          updatePreview(sec);
+        });
       }
     });
 
     function resetForm() {
-      document.getElementById('address').value = '';
+      document.getElementById('address').value = "";
       document.getElementById('inspector').selectedIndex = 0;
       document.getElementById('roof-type').selectedIndex = 0;
       document.getElementById('roof-condition').selectedIndex = 0;
       setDefaultDate();
       const container = document.getElementById('observations-container');
-      container.innerHTML = '';
+      container.innerHTML = "";
       observationCount = 0;
       addObservation();
     }
 
-    // Load a report from Firebase and populate form
-    async function loadReport(id) {
-      const snap = await db.ref(`reports/${id}`).once('value');
-      const data = snap.val();
-      loadedReportId = id;
-      document.getElementById('address').value = data.address;
-      document.getElementById('inspector').value = data.inspector;
-      document.getElementById('roof-type').value = data.roofType;
-      document.getElementById('roof-condition').value = data.roofCondition;
-      document.getElementById('date').value = data.date;
-
-      // rebuild observations
-      const container = document.getElementById('observations-container');
-      container.innerHTML = '';
-      observationCount = 0;
-      data.observations.forEach(obs => {
-        addObservation();
-        const sec = container.querySelectorAll('.observation-section')[observationCount-1];
-        sec.querySelector('.observation-desc').value = obs.desc;
-        // store previous photos' dataUrls
-        sec.photosDataUrls = obs.photos || [];
-        // show thumbnails
+    // ==== Cropping logic ====
+    let currentSection, cropper;
+    function attachCropListener(input) {
+      input.addEventListener('change', e => {
+        const sec = e.target.closest('.observation-section');
+        sec.pendingFiles = Array.from(e.target.files);
+        sec.photosDataUrls = [];
+        e.target.value = "";
+        processNextCrop(sec);
+      });
+    }
+    function initCropping() {
+      document.querySelectorAll('.observation-photos').forEach(ip => attachCropListener(ip));
+    }
+    function processNextCrop(sec) {
+      if (!sec.pendingFiles.length) {
+        closeModal();
+        updatePreview(sec);
+        return;
+      }
+      currentSection = sec;
+      const file = sec.pendingFiles.shift();
+      const reader = new FileReader();
+      reader.onload = () => {
+        cropImage.src = reader.result;
+        openModal();
+      };
+      reader.readAsDataURL(file);
+    }
+    const cropModal = document.getElementById('cropModal');
+    const cropImage = document.getElementById('cropImage');
+    document.getElementById('cropClose').onclick = () => {
+      closeModal();
+      currentSection.pendingFiles = [];
+      updatePreview(currentSection);
+    };
+    function openModal() {
+      cropModal.style.display = "flex";
+      cropper = new Cropper(cropImage, { aspectRatio: 1, viewMode: 1, autoCropArea: 1 });
+    }
+    function closeModal() {
+      cropper.destroy();
+      cropModal.style.display = "none";
+    }
+    document.getElementById('rotateLeft').onclick  = () => cropper.rotate(-90);
+    document.getElementById('rotateRight').onclick = () => cropper.rotate(90);
+    document.getElementById('cropConfirm').onclick = () => {
+      const canvas = cropper.getCroppedCanvas({ width: 200, height: 200 });
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+      currentSection.photosDataUrls.push(dataUrl);
+      closeModal();
+      processNextCrop(currentSection);
+    };
+    function updatePreview(sec) {
+      sec.querySelectorAll('.photo-previews').forEach(el => el.remove());
+      if (sec.photosDataUrls && sec.photosDataUrls.length) {
         const preview = document.createElement('div');
         preview.className = 'photo-previews';
-        obs.photos.forEach(url => {
+        sec.photosDataUrls.forEach(url => {
           const img = document.createElement('img');
           img.src = url;
           preview.appendChild(img);
         });
         sec.appendChild(preview);
-      });
+      }
     }
 
-    // ==== Observation add/remove ====
+    // ==== Observations add/remove ====
     let observationCount = 0;
     function addObservation() {
       const container = document.getElementById('observations-container');
@@ -273,14 +356,15 @@
         <label>Upload Photos for This Observation:</label>
         <input type="file" class="observation-photos" multiple accept="image/*">
         <div class="button-group">
-          <button type="button" class="remove-btn"
-                  onclick="removeObservation(this)">Remove Observation</button>
+          <button type="button" class="remove-btn" onclick="removeObservation(this)">
+            Remove Observation
+          </button>
         </div>
       `;
       container.appendChild(div);
       observationCount++;
+      attachCropListener(div.querySelector('.observation-photos'));
     }
-
     function removeObservation(btn) {
       if (observationCount > 1) {
         btn.closest('.observation-section').remove();
@@ -292,39 +376,37 @@
 
     // ==== PDF generation & Firebase save ====
     const { jsPDF } = window.jspdf;
-
     async function generatePDF() {
       try {
-        // 1) collect form data
+        // gather data
         const address = document.getElementById('address').value.trim();
         const inspector = document.getElementById('inspector').value;
         const roofType = document.getElementById('roof-type').value;
         const roofCondition = document.getElementById('roof-condition').value;
         const date = document.getElementById('date').value;
 
-        // 2) prepare jsPDF
         const doc = new jsPDF({ compress: true });
         const w = doc.internal.pageSize.getWidth();
         let y = 20;
 
-        // 3) add logo as original PNG to preserve color
+        // logo (original PNG)
         try {
-          const logoImg = await loadLogoRaw();
-          const displayW = 80;
-          const displayH = (logoImg.height / logoImg.width) * displayW;
-          doc.addImage(logoImg.element, 'PNG', (w - displayW) / 2, y, displayW, displayH);
-          y += displayH + 10;
+          const logoObj = await loadLogoRaw();
+          const dw = 80;
+          const dh = (logoObj.height / logoObj.width) * dw;
+          doc.addImage(logoObj.element, 'PNG', (w - dw) / 2, y, dw, dh);
+          y += dh + 10;
         } catch (e) {
           console.warn("Logo load failed:", e);
         }
 
-        // 4) header
+        // title
         doc.setFontSize(18);
-        doc.setTextColor(19,29,53);
-        doc.text("Roof Inspection Report", w/2, y, { align: 'center' });
+        doc.setTextColor(19, 29, 53);
+        doc.text("Roof Inspection Report", w / 2, y, { align: 'center' });
         y += 15;
 
-        // 5) details
+        // details
         doc.setFontSize(12);
         doc.setTextColor(0);
         const details = [
@@ -341,43 +423,19 @@
         });
         y += 8;
 
-        // 6) observations
-        const obsSecs = document.querySelectorAll('.observation-section');
-        const savedObservations = [];
-        for (let i = 0; i < obsSecs.length; i++) {
-          const sec = obsSecs[i];
+        // observations
+        const sections = document.querySelectorAll('.observation-section');
+        const savedObs = [];
+        const maxW = (w - 45) * 0.5;
+
+        sections.forEach((sec, i) => {
           const desc = sec.querySelector('.observation-desc').value.trim();
+          const photos = sec.photosDataUrls || [];
+          savedObs.push({ desc, photos });
 
-          // gather images: either newly uploaded or from previous dataUrls
-          let rawPhotos = [];
-          const files = sec.querySelector('.observation-photos').files;
-          if (files.length > 0) {
-            for (let f of files) {
-              rawPhotos.push(await readFileAsJpeg(f));
-            }
-          } else if (sec.photosDataUrls) {
-            rawPhotos = sec.photosDataUrls;
-          }
-
-          // save for Firebase
-          savedObservations.push({ desc, photos: rawPhotos });
-
-          // print to PDF
           const textLines = doc.splitTextToSize(desc, w - 40);
           const textH = textLines.length * 6 + 10;
-          const imgObjs = rawPhotos.map(dataUrl => {
-            const props = doc.getImageProperties(dataUrl);
-            const maxW = (w - 45) * 0.5;
-            const scale = maxW / props.width;
-            return { dataUrl, width: props.width * scale, height: props.height * scale };
-          });
-          const imgsH = imgObjs.reduce((sum, img, idx) => {
-            if (idx % 2 === 0) {
-              const next = imgObjs[idx+1];
-              return sum + Math.max(img.height, next?.height||0) + 5;
-            }
-            return sum;
-          }, 0);
+          const imgsH = Math.ceil(photos.length / 2) * (maxW + 5);
 
           if (y + textH + imgsH > 280) { doc.addPage(); y = 20; }
 
@@ -389,29 +447,26 @@
           y += 4;
 
           let idx = 0;
-          while (idx < imgObjs.length) {
-            const img1 = imgObjs[idx], img2 = imgObjs[idx+1];
-            const rowH = Math.max(img1.height, img2?.height||0);
-            if (y + rowH > 280) { doc.addPage(); y = 20; }
-            doc.addImage(img1.dataUrl, 'JPEG', 20, y, img1.width, img1.height);
-            if (img2) {
-              doc.addImage(img2.dataUrl, 'JPEG', 20 + img1.width + 5, y, img2.width, img2.height);
-              idx += 2;
-            } else { idx += 1; }
-            y += rowH + 5;
+          while (idx < photos.length) {
+            if (y + maxW > 280) { doc.addPage(); y = 20; }
+            doc.addImage(photos[idx], 'JPEG', 20, y, maxW, maxW);
+            if (idx + 1 < photos.length) {
+              doc.addImage(photos[idx+1], 'JPEG', 20 + maxW + 5, y, maxW, maxW);
+            }
+            idx += 2;
+            y += maxW + 5;
           }
           y += 2;
-        }
+        });
 
-        // 7) save PDF
-        const safeAddr = address.replace(/[^a-zA-Z0-9]/g,'_').substr(0,50);
+        const safeAddr = address.replace(/[^a-zA-Z0-9]/g, '_').substr(0,50);
         const filename = `Inspection_Report_${safeAddr}_${date}.pdf`;
         doc.save(filename);
 
-        // 8) save to Firebase
+        // save to Firebase
         const reportObj = {
           address, inspector, roofType, roofCondition, date,
-          observations: savedObservations,
+          observations: savedObs,
           updatedAt: Date.now()
         };
         if (loadedReportId) {
@@ -420,70 +475,36 @@
           const newRef = db.ref('reports').push();
           await newRef.set(reportObj);
           loadedReportId = newRef.key;
-          // add to dropdown
-          const opt = document.createElement('option');
-          opt.value = loadedReportId;
-          opt.text = `${date} — ${address}`;
-          document.getElementById('reportList').appendChild(opt);
+          const o = document.createElement('option');
+          o.value = loadedReportId;
+          o.text = `${date} — ${address}`;
+          document.getElementById('reportList').appendChild(o);
           document.getElementById('reportList').value = loadedReportId;
         }
-        alert("Report saved and PDF generated!");
 
+        alert("Report saved and PDF generated!");
       } catch (err) {
         console.error(err);
         alert("Error: " + err.message);
       }
     }
 
-    // Load logo as raw PNG to preserve color
     function loadLogoRaw() {
-      return new Promise((resolve, reject) => {
+      return new Promise((res, rej) => {
         const img = new Image();
-        img.onload = () => resolve({ element: img, width: img.naturalWidth, height: img.naturalHeight });
-        img.onerror = () => reject(new Error("Logo not found"));
+        img.onload = () => res({ element: img, width: img.naturalWidth, height: img.naturalHeight });
+        img.onerror = () => rej(new Error("Logo not found"));
         img.src = 'Logo%20seal%20e%20slogan@2x.png';
       });
     }
 
-    // Read file & return a medium-quality JPEG dataUrl
-    function readFileAsJpeg(file) {
-      return new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          EXIF.getData(file, function() {
-            const orient = EXIF.getTag(this,'Orientation') || 1;
-            const img = new Image();
-            img.onload = () => {
-              const c = document.createElement('canvas');
-              const ctx = c.getContext('2d');
-              // set canvas dims based on orientation
-              if ([5,6,7,8].includes(orient)) {
-                c.width = img.height; c.height = img.width;
-              } else {
-                c.width = img.width; c.height = img.height;
-              }
-              // apply orientation transforms
-              ctx.save();
-              switch(orient) {
-                case 2: ctx.transform(-1,0,0,1,img.width,0); break;
-                case 3: ctx.transform(-1,0,0,-1,img.width,img.height); break;
-                case 4: ctx.transform(1,0,0,-1,0,img.height); break;
-                case 5: ctx.transform(0,1,1,0,0,0); break;
-                case 6: ctx.transform(0,1,-1,0,img.height,0); break;
-                case 7: ctx.transform(0,-1,-1,0,img.height,img.width); break;
-                case 8: ctx.transform(0,-1,1,0,0,img.width); break;
-              }
-              ctx.drawImage(img,0,0);
-              ctx.restore();
-              res(c.toDataURL('image/jpeg',0.6));
-            };
-            img.src = e.target.result;
-          });
-        };
-        reader.onerror = rej;
-        reader.readAsDataURL(file);
-      });
-    }
+    // ==== Initialize on load ====
+    window.addEventListener('DOMContentLoaded', () => {
+      setDefaultDate();
+      loadReports();
+      initCropping();
+      addObservation(); // first observation
+    });
   </script>
 </body>
 </html>
