@@ -62,8 +62,6 @@
     .add-btn{background:var(--success-color);color:#fff;}
     .remove-btn{background:var(--danger-color);color:#fff;}
     .submit-btn{background:var(--primary-color);color:#fff;}
-
-    /* past reports table */
     #reportsTable {
       width:100%; border-collapse:collapse; margin-top:10px;
     }
@@ -71,8 +69,6 @@
       border:1px solid #ccc; padding:8px; text-align:left;
     }
     #reportsTable th { background:#f0f0f0; }
-
-    /* photo previews */
     .photo-previews { margin-top:10px; }
     .photo-wrapper {
       position: relative;
@@ -97,8 +93,6 @@
       text-align:center;
       cursor:pointer;
     }
-
-    /* crop modal */
     #cropModal {
       display:none;
       position:fixed; top:0; left:0;
@@ -208,7 +202,6 @@
     <button class="submit-btn" onclick="generatePDF()">Save &amp; Generate PDF</button>
   </div>
 
-  <!-- Crop Modal -->
   <div id="cropModal">
     <div class="modal-content">
       <span id="cropClose" class="modal-close">&times;</span>
@@ -253,16 +246,15 @@
     window.addEventListener('DOMContentLoaded', () => {
       setDefaultDate();
       loadReports();
-      addObservation(); // start with one
+      addObservation();
     });
 
     function setDefaultDate() {
-      const d=new Date();
-      document.getElementById('date').value=
+      const d = new Date();
+      document.getElementById('date').value =
         `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
-    // ==== Load and list reports ====
     async function loadReports() {
       const snap = await db.ref('reports').once('value');
       reportList.querySelectorAll('option:not([value=""])').forEach(o=>o.remove());
@@ -297,11 +289,11 @@
       const snap = await db.ref(`reports/${id}`).once('value');
       const data = snap.val();
       loadedReportId = id;
-      document.getElementById('address').value      = data.address;
-      document.getElementById('inspector').value    = data.inspector;
-      document.getElementById('roof-type').value    = data.roofType;
-      document.getElementById('roof-condition').value = data.roofCondition;
-      document.getElementById('date').value         = data.date;
+      document.getElementById('address').value       = data.address;
+      document.getElementById('inspector').value     = data.inspector;
+      document.getElementById('roof-type').value     = data.roofType;
+      document.getElementById('roof-condition').value= data.roofCondition;
+      document.getElementById('date').value          = data.date;
       obsContainer.innerHTML = '';
       observationCount = 0;
       data.observations.forEach(obs => {
@@ -315,14 +307,14 @@
 
     function resetForm() {
       loadedReportId = '';
-      ['address','inspector','roof-type','roof-condition'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(el.tagName==='SELECT') el.selectedIndex=0;
-        else el.value='';
+      ['address','inspector','roof-type','roof-condition'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName==='SELECT') el.selectedIndex = 0;
+        else el.value = '';
       });
       setDefaultDate();
-      obsContainer.innerHTML='';
-      observationCount=0;
+      obsContainer.innerHTML = '';
+      observationCount = 0;
       addObservation();
     }
 
@@ -330,8 +322,8 @@
     let observationCount = 0;
     function addObservation() {
       const div = document.createElement('div');
-      div.className='form-group observation-section';
-      div.innerHTML=`
+      div.className = 'form-group observation-section';
+      div.innerHTML = `
         <label>Observation:</label>
         <textarea class="observation-desc" required></textarea>
         <label>Upload Photos:</label>
@@ -344,8 +336,12 @@
       observationCount++;
 
       div.querySelector('.remove-btn').onclick = () => {
-        if(observationCount>1) { div.remove(); observationCount--; }
-        else alert('At least one observation is required');
+        if (observationCount > 1) {
+          div.remove();
+          observationCount--;
+        } else {
+          alert('At least one observation is required');
+        }
       };
 
       const input = div.querySelector('.observation-photos');
@@ -359,7 +355,7 @@
     }
 
     function processNextCrop(sec) {
-      if(!sec.pendingFiles.length) {
+      if (!sec.pendingFiles.length) {
         cropClose.click();
         updatePreview(sec);
         return;
@@ -385,7 +381,7 @@
     }
 
     function closeModal() {
-      if(cropper) cropper.destroy();
+      if (cropper) cropper.destroy();
       cropModal.style.display = 'none';
     }
 
@@ -395,7 +391,8 @@
     cropConfirm.onclick = () => {
       const canvas = cropper.getCroppedCanvas();
       const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
       currentSection.photosDataUrls.push(dataUrl);
       closeModal();
@@ -403,13 +400,13 @@
     };
 
     cropClose.onclick = () => {
-      if(currentSection) currentSection.pendingFiles = [];
+      if (currentSection) currentSection.pendingFiles = [];
       closeModal();
     };
 
     function updatePreview(sec) {
-      sec.querySelectorAll('.photo-previews').forEach(e=>e.remove());
-      if(sec.photosDataUrls?.length) {
+      sec.querySelectorAll('.photo-previews').forEach(e => e.remove());
+      if (sec.photosDataUrls?.length) {
         const container = document.createElement('div');
         container.className = 'photo-previews';
         sec.photosDataUrls.forEach((url, idx) => {
@@ -421,7 +418,7 @@
           btn.className = 'remove-photo-btn';
           btn.textContent = '×';
           btn.onclick = () => {
-            sec.photosDataUrls.splice(idx,1);
+            sec.photosDataUrls.splice(idx, 1);
             updatePreview(sec);
           };
           wrap.appendChild(img);
@@ -437,47 +434,50 @@
 
     async function generatePDF() {
       try {
-        const address = document.getElementById('address').value.trim();
-        const inspector = document.getElementById('inspector').value;
-        const roofType = document.getElementById('roof-type').value;
+        const address       = document.getElementById('address').value.trim();
+        const inspector     = document.getElementById('inspector').value;
+        const roofType      = document.getElementById('roof-type').value;
         const roofCondition = document.getElementById('roof-condition').value;
-        const date = document.getElementById('date').value;
+        const date          = document.getElementById('date').value;
 
         let ref;
-        if(loadedReportId) {
+        if (loadedReportId) {
           ref = db.ref(`reports/${loadedReportId}`);
         } else {
           ref = db.ref('reports').push();
           loadedReportId = ref.key;
           const opt = document.createElement('option');
-          opt.value = loadedReportId;
+          opt.value     = loadedReportId;
           opt.textContent = `${date} — ${address}`;
           reportList.appendChild(opt);
           reportList.value = loadedReportId;
         }
 
         const doc = new jsPDF({ compress: true });
-        const w = doc.internal.pageSize.getWidth();
-        let y = 20;
+        const w   = doc.internal.pageSize.getWidth();
+        let y     = 20;
 
+        // Logo
         try {
-          const imgEl = await new Promise((res,rej)=>{
-            const i=new Image();
-            i.onload = ()=>res(i);
-            i.onerror = ()=>rej();
-            i.src='Logo%20seal%20e%20slogan@2x.png';
+          const imgEl = await new Promise((res, rej) => {
+            const i = new Image();
+            i.onload  = () => res(i);
+            i.onerror = () => rej();
+            i.src     = 'Logo%20seal%20e%20slogan@2x.png';
           });
-          const dw=80, dh=(imgEl.naturalHeight/imgEl.naturalWidth)*dw;
-          doc.addImage(imgEl,'PNG',(w-dw)/2,y,dw,dh);
+          const dw = 80, dh = (imgEl.naturalHeight / imgEl.naturalWidth) * dw;
+          doc.addImage(imgEl, 'PNG', (w - dw)/2, y, dw, dh);
           y += dh + 10;
-        } catch{}
+        } catch {}
 
+        // Title & metadata
         doc.setFontSize(18);
         doc.setTextColor(19,29,53);
         doc.text('Roof Inspection Report', w/2, y, { align:'center' });
         y += 15;
 
-        doc.setFontSize(12); doc.setTextColor(0);
+        doc.setFontSize(12);
+        doc.setTextColor(0);
         const lines = [
           `Property: ${address}`,
           `Inspector: ${inspector}`,
@@ -486,30 +486,43 @@
           `Roof Condition: ${roofCondition}`
         ];
         lines.forEach(l => {
-          if(y > 280) { doc.addPage(); y = 20; }
+          if (y > 280) { doc.addPage(); y = 20; }
           doc.text(l, 20, y);
           y += 8;
         });
         y += 8;
 
-        const secs = [...document.querySelectorAll('.observation-section')];
+        // Observations array & image size
+        const secs    = [...document.querySelectorAll('.observation-section')];
         const savedObs = [];
         const imgSize = (w - 45) / 2;
 
+        // === Ensure first two photos of Obs #1 on first page ===
+        const firstPhotos = (secs[0].photosDataUrls || []).slice();
+        if (firstPhotos.length >= 2) {
+          // remove them to avoid double-draw
+          secs[0].photosDataUrls.splice(0, 2);
+          doc.addImage(firstPhotos[0], 'JPEG', 20, y, imgSize, imgSize, undefined, 'SLOW');
+          doc.addImage(firstPhotos[1], 'JPEG', 20 + imgSize + 5, y, imgSize, imgSize, undefined, 'SLOW');
+          y += imgSize + 5;
+        }
+
+        // === Loop through all observations ===
         for (let i = 0; i < secs.length; i++) {
-          const sec = secs[i];
-          const desc = sec.querySelector('.observation-desc').value.trim();
+          const sec    = secs[i];
+          const desc   = sec.querySelector('.observation-desc').value.trim();
           const photos = sec.photosDataUrls || [];
           savedObs.push({ desc, photos });
 
-          const txt = doc.splitTextToSize(desc, w - 40);
-          const txtH = txt.length * 6 + 10;
+          const txt   = doc.splitTextToSize(desc, w - 40);
+          const txtH  = txt.length * 6 + 10;
           const imgsH = Math.ceil(photos.length/2) * (imgSize + 5);
           if (y + txtH + imgsH > 280) { doc.addPage(); y = 20; }
 
           doc.setFont('helvetica','bold');
           doc.text(`Observation #${i+1}:`, 20, y);
           y += 6;
+
           doc.setFont('helvetica','normal');
           txt.forEach(line => {
             doc.text(line, 20, y);
@@ -521,9 +534,9 @@
           while (idx < photos.length) {
             if (y + imgSize > 280) { doc.addPage(); y = 20; }
             doc.addImage(photos[idx], 'JPEG', 20, y, imgSize, imgSize, undefined, 'SLOW');
-            if (photos[idx + 1]) {
+            if (photos[idx+1]) {
               doc.addImage(
-                photos[idx + 1],
+                photos[idx+1],
                 'JPEG',
                 20 + imgSize + 5,
                 y,
@@ -539,6 +552,7 @@
           y += 2;
         }
 
+        // Save PDF & upload
         const blob = doc.output('blob');
         const filename = `Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
         doc.save(filename);
@@ -548,7 +562,11 @@
         const pdfUrl = await storageRef.getDownloadURL();
 
         await ref.set({
-          address, inspector, roofType, roofCondition, date,
+          address,
+          inspector,
+          roofType,
+          roofCondition,
+          date,
           observations: savedObs,
           pdfUrl,
           updatedAt: Date.now()
@@ -556,7 +574,8 @@
 
         alert('Report saved, PDF generated & uploaded!');
         loadReports();
-      } catch(err) {
+
+      } catch (err) {
         console.error(err);
         alert('Error: ' + err.message);
       }
