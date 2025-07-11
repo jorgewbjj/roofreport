@@ -350,8 +350,9 @@
 
       const input = div.querySelector('.observation-photos');
       input.onchange = e => {
-        div.pendingFiles = Array.from(e.target.files);
-        div.photosDataUrls = [];
+        const newFiles = Array.from(e.target.files);
+        div.pendingFiles = (div.pendingFiles || []).concat(newFiles);
+        if (!div.photosDataUrls) div.photosDataUrls = [];
         e.target.value = '';
         processNextCrop(div);
       };
@@ -392,12 +393,10 @@
     rotateRight.onclick = () => cropper.rotate(90);
 
     cropConfirm.onclick = () => {
-      // ★ HIGH‐QUALITY: use full resolution + 100% JPEG quality
-      const canvas = cropper.getCroppedCanvas(); // natural resolution
+      const canvas = cropper.getCroppedCanvas();
       const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      const dataUrl = canvas.toDataURL('image/jpeg', 1.0); // max quality
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
       currentSection.photosDataUrls.push(dataUrl);
       closeModal();
       processNextCrop(currentSection);
@@ -521,7 +520,6 @@
           let idx = 0;
           while (idx < photos.length) {
             if (y + imgSize > 280) { doc.addPage(); y = 20; }
-            // ★ HIGH‐QUALITY PDF EMBED: use 'SLOW' compression mode
             doc.addImage(photos[idx], 'JPEG', 20, y, imgSize, imgSize, undefined, 'SLOW');
             if (photos[idx + 1]) {
               doc.addImage(
