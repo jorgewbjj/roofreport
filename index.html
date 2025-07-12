@@ -139,10 +139,7 @@
   <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 <body>
@@ -208,7 +205,6 @@
     <button class="submit-btn" onclick="generatePDF()">Save &amp; Generate PDF</button>
   </div>
 
-  <!-- Crop Modal -->
   <div id="cropModal">
     <div class="modal-content">
       <span id="cropClose" class="modal-close">&times;</span>
@@ -257,27 +253,24 @@
     });
 
     function setDefaultDate() {
-      const d = new Date();
-      document.getElementById('date').value =
+      const d=new Date();
+      document.getElementById('date').value=
         `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
+    // ==== Load/list past reports ====
     async function loadReports() {
       const snap = await db.ref('reports').once('value');
       reportList.querySelectorAll('option:not([value=""])').forEach(o=>o.remove());
       pastReportsBody.innerHTML = '';
       snap.forEach(ch => {
-        const data = ch.val();
+        const d = ch.val();
         const opt = document.createElement('option');
         opt.value = ch.key;
-        opt.textContent = `${data.date} — ${data.address}`;
+        opt.textContent = `${d.date} — ${d.address}`;
         reportList.appendChild(opt);
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${data.date}</td>
-          <td>${data.address}</td>
-          <td><button data-id="${ch.key}">Edit</button></td>
-        `;
+        tr.innerHTML = `<td>${d.date}</td><td>${d.address}</td><td><button>Edit</button></td>`;
         pastReportsBody.appendChild(tr);
         tr.querySelector('button').onclick = () => {
           reportList.value = ch.key;
@@ -294,16 +287,16 @@
 
     async function loadReport(id) {
       const snap = await db.ref(`reports/${id}`).once('value');
-      const data = snap.val();
+      const d = snap.val();
       loadedReportId = id;
-      document.getElementById('address').value       = data.address;
-      document.getElementById('inspector').value     = data.inspector;
-      document.getElementById('roof-type').value     = data.roofType;
-      document.getElementById('roof-condition').value= data.roofCondition;
-      document.getElementById('date').value          = data.date;
+      document.getElementById('address').value       = d.address;
+      document.getElementById('inspector').value     = d.inspector;
+      document.getElementById('roof-type').value     = d.roofType;
+      document.getElementById('roof-condition').value= d.roofCondition;
+      document.getElementById('date').value          = d.date;
       obsContainer.innerHTML = '';
       observationCount = 0;
-      data.observations.forEach(obs => {
+      d.observations.forEach(obs => {
         addObservation();
         const sec = obsContainer.children[observationCount-1];
         sec.querySelector('.observation-desc').value = obs.desc;
@@ -314,10 +307,10 @@
 
     function resetForm() {
       loadedReportId = '';
-      ['address','inspector','roof-type','roof-condition'].forEach(id => {
+      ['address','inspector','roof-type','roof-condition'].forEach(id=>{
         const el = document.getElementById(id);
-        if (el.tagName==='SELECT') el.selectedIndex = 0;
-        else el.value = '';
+        if (el.tagName==='SELECT') el.selectedIndex=0;
+        else el.value='';
       });
       setDefaultDate();
       obsContainer.innerHTML = '';
@@ -341,20 +334,14 @@
       `;
       obsContainer.appendChild(div);
       observationCount++;
-
       div.querySelector('.remove-btn').onclick = () => {
-        if (observationCount > 1) {
-          div.remove();
-          observationCount--;
-        } else {
-          alert('At least one observation is required');
-        }
+        if (observationCount>1) { div.remove(); observationCount--; }
+        else alert('At least one observation is required');
       };
-
       const input = div.querySelector('.observation-photos');
       input.onchange = e => {
-        const newFiles = Array.from(e.target.files);
-        div.pendingFiles = (div.pendingFiles || []).concat(newFiles);
+        const files = Array.from(e.target.files);
+        div.pendingFiles = (div.pendingFiles||[]).concat(files);
         if (!div.photosDataUrls) div.photosDataUrls = [];
         e.target.value = '';
         processNextCrop(div);
@@ -362,84 +349,52 @@
     }
 
     function processNextCrop(sec) {
-      if (!sec.pendingFiles.length) {
-        cropClose.click();
-        updatePreview(sec);
-        return;
-      }
+      if (!sec.pendingFiles.length) { cropClose.click(); updatePreview(sec); return; }
       currentSection = sec;
       const file = sec.pendingFiles.shift();
       const reader = new FileReader();
-      reader.onload = () => {
-        cropImage.src = reader.result;
-        openModal();
-      };
+      reader.onload = () => { cropImage.src = reader.result; openModal(); };
       reader.readAsDataURL(file);
     }
 
     function openModal() {
       cropModal.style.display = 'flex';
       cropper = new Cropper(cropImage, {
-        aspectRatio: 1,
-        viewMode: 1,
-        autoCropArea: 1,
-        responsive: true
+        aspectRatio: 1, viewMode: 1, autoCropArea: 1, responsive: true
       });
     }
-
-    function closeModal() {
-      if (cropper) cropper.destroy();
-      cropModal.style.display = 'none';
-    }
-
+    function closeModal() { if(cropper) cropper.destroy(); cropModal.style.display='none'; }
     rotateLeft.onclick  = () => cropper.rotate(-90);
     rotateRight.onclick = () => cropper.rotate(90);
-
     cropConfirm.onclick = () => {
-      const canvas = cropper.getCroppedCanvas();
-      const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      const dataUrl = canvas.toDataURL('image/jpeg', 1.0);
-      currentSection.photosDataUrls.push(dataUrl);
-      closeModal();
-      processNextCrop(currentSection);
+      const cv = cropper.getCroppedCanvas();
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
+      const url = cv.toDataURL('image/jpeg',1.0);
+      currentSection.photosDataUrls.push(url);
+      closeModal(); processNextCrop(currentSection);
     };
-
-    cropClose.onclick = () => {
-      if (currentSection) currentSection.pendingFiles = [];
-      closeModal();
-    };
+    cropClose.onclick = () => { if(currentSection) currentSection.pendingFiles=[]; closeModal(); };
 
     function updatePreview(sec) {
-      sec.querySelectorAll('.photo-previews').forEach(e => e.remove());
-      if (sec.photosDataUrls?.length) {
-        const container = document.createElement('div');
-        container.className = 'photo-previews';
-        sec.photosDataUrls.forEach((url, idx) => {
-          const wrap = document.createElement('div');
-          wrap.className = 'photo-wrapper';
-          const img = document.createElement('img');
-          img.src = url;
+      sec.querySelectorAll('.photo-previews').forEach(e=>e.remove());
+      if(sec.photosDataUrls?.length){
+        const ctr = document.createElement('div'); ctr.className='photo-previews';
+        sec.photosDataUrls.forEach((u,i)=>{
+          const w = document.createElement('div'); w.className='photo-wrapper';
+          const im = document.createElement('img'); im.src=u;
           const btn = document.createElement('button');
-          btn.className = 'remove-photo-btn';
-          btn.textContent = '×';
-          btn.onclick = () => {
-            sec.photosDataUrls.splice(idx, 1);
-            updatePreview(sec);
-          };
-          wrap.appendChild(img);
-          wrap.appendChild(btn);
-          container.appendChild(wrap);
+          btn.className='remove-photo-btn'; btn.textContent='×';
+          btn.onclick=()=>{ sec.photosDataUrls.splice(i,1); updatePreview(sec); };
+          w.appendChild(im); w.appendChild(btn); ctr.appendChild(w);
         });
-        sec.appendChild(container);
+        sec.appendChild(ctr);
       }
     }
 
     // ==== PDF generation & Firebase save ====
     const { jsPDF } = window.jspdf;
-
-    async function generatePDF() {
+    async function generatePDF(){
       try {
         const address       = document.getElementById('address').value.trim();
         const inspector     = document.getElementById('inspector').value;
@@ -448,13 +403,12 @@
         const date          = document.getElementById('date').value;
 
         let ref;
-        if (loadedReportId) {
-          ref = db.ref(`reports/${loadedReportId}`);
-        } else {
+        if(loadedReportId) ref = db.ref(`reports/${loadedReportId}`);
+        else {
           ref = db.ref('reports').push();
           loadedReportId = ref.key;
           const opt = document.createElement('option');
-          opt.value     = loadedReportId;
+          opt.value = loadedReportId;
           opt.textContent = `${date} — ${address}`;
           reportList.appendChild(opt);
           reportList.value = loadedReportId;
@@ -466,25 +420,22 @@
 
         // Logo
         try {
-          const imgEl = await new Promise((res, rej) => {
-            const i = new Image();
-            i.onload  = () => res(i);
-            i.onerror = () => rej();
+          const imgEl = await new Promise((res,rej)=>{
+            const i=new Image();
+            i.onload  = ()=>res(i);
+            i.onerror = ()=>rej();
             i.src     = 'Logo%20seal%20e%20slogan@2x.png';
           });
-          const dw = 80, dh = (imgEl.naturalHeight / imgEl.naturalWidth) * dw;
-          doc.addImage(imgEl, 'PNG', (w - dw)/2, y, dw, dh);
-          y += dh + 10;
-        } catch {}
+          const dw=80, dh=(imgEl.naturalHeight/imgEl.naturalWidth)*dw;
+          doc.addImage(imgEl,'PNG',(w-dw)/2,y,dw,dh);
+          y += dh+10;
+        } catch{}
 
-        // Title & metadata
-        doc.setFontSize(18);
-        doc.setTextColor(19,29,53);
-        doc.text('Roof Inspection Report', w/2, y, { align:'center' });
-        y += 15;
-
-        doc.setFontSize(12);
-        doc.setTextColor(0);
+        // Title & meta
+        doc.setFontSize(18); doc.setTextColor(19,29,53);
+        doc.text('Roof Inspection Report', w/2,y,{align:'center'});
+        y+=15;
+        doc.setFontSize(12); doc.setTextColor(0);
         const lines = [
           `Property: ${address}`,
           `Inspector: ${inspector}`,
@@ -492,90 +443,92 @@
           `Roof Type: ${roofType}`,
           `Roof Condition: ${roofCondition}`
         ];
-        lines.forEach(l => {
-          if (y > 280) { doc.addPage(); y = 20; }
-          doc.text(l, 20, y);
-          y += 8;
+        lines.forEach(l=>{
+          if(y>280){ doc.addPage(); y=20; }
+          doc.text(l,20,y); y+=8;
         });
-        y += 8;
+        y+=8;
 
-        // Observations & images
-        const secs    = [...document.querySelectorAll('.observation-section')];
+        // Observations
+        const secs = [...document.querySelectorAll('.observation-section')];
         const savedObs = [];
         const imgSize = (w - 45) / 2;
 
-        for (let i = 0; i < secs.length; i++) {
-          const sec    = secs[i];
-          const desc   = sec.querySelector('.observation-desc').value.trim();
-          const photos = sec.photosDataUrls || [];
-          savedObs.push({ desc, photos });
-
-          // Observation text first
-          const txt   = doc.splitTextToSize(desc, w - 40);
-          const txtH  = txt.length * 6 + 10;
-          const imgsH = Math.ceil(photos.length/2) * (imgSize + 5);
-          if (y + txtH + imgsH > 280) { doc.addPage(); y = 20; }
-
+        // FIRST OBSERVATION on page 1:
+        if(secs.length>0){
+          const sec0 = secs.shift();
+          const desc0 = sec0.querySelector('.observation-desc').value.trim();
+          const photos0 = sec0.photosDataUrls||[];
+          savedObs.push({desc:desc0,photos:photos0});
+          const txt0 = doc.splitTextToSize(desc0, w-40);
+          const txtH0 = txt0.length*6+10;
+          if(y+txtH0>280){ doc.addPage(); y=20; }
           doc.setFont('helvetica','bold');
-          doc.text(`Observation #${i+1}:`, 20, y);
-          y += 6;
-
+          doc.text('Observation #1:',20,y); y+=6;
           doc.setFont('helvetica','normal');
-          txt.forEach(line => {
-            doc.text(line, 20, y);
-            y += 6;
+          txt0.forEach(line=>{ doc.text(line,20,y); y+=6; });
+          y+=4;
+          // up to 2 pics here
+          const firstTwo = photos0.slice(0,2);
+          firstTwo.forEach((p,i)=>{
+            if(y+imgSize>280){ doc.addPage(); y=20; }
+            const x = 20 + i*(imgSize+5);
+            doc.addImage(p,'JPEG',x,y,imgSize,imgSize,undefined,'SLOW');
           });
-          y += 4;
-
-          // Then photos
-          let idx = 0;
-          while (idx < photos.length) {
-            if (y + imgSize > 280) { doc.addPage(); y = 20; }
-            doc.addImage(photos[idx], 'JPEG', 20, y, imgSize, imgSize, undefined, 'SLOW');
-            if (photos[idx+1]) {
-              doc.addImage(
-                photos[idx+1],
-                'JPEG',
-                20 + imgSize + 5,
-                y,
-                imgSize,
-                imgSize,
-                undefined,
-                'SLOW'
-              );
-            }
-            idx += 2;
-            y += imgSize + 5;
+          y += imgSize + 5;
+          // extra pics on subsequent pages
+          if(photos0.length>2){
+            const rest = photos0.slice(2);
+            rest.forEach((p,i)=>{
+              if(i%2===0){ doc.addPage(); y=20; }
+              const x = 20 + (i%2)*(imgSize+5);
+              doc.addImage(p,'JPEG',x,y,imgSize,imgSize,undefined,'SLOW');
+              if(i%2===1) y += imgSize + 5;
+            });
           }
-          y += 2;
         }
 
-        // Save PDF & upload
+        // REMAINING OBSERVATIONS:
+        secs.forEach((sec,i)=>{
+          const idx = i+2; // because first was #1
+          const desc = sec.querySelector('.observation-desc').value.trim();
+          const photos = sec.photosDataUrls||[];
+          savedObs.push({desc,photos});
+          const txt = doc.splitTextToSize(desc, w-40);
+          const txtH = txt.length*6+10;
+          const imgsH = Math.ceil(photos.length/2)*(imgSize+5);
+          if(y+txtH+imgsH>280){ doc.addPage(); y=20; }
+          doc.setFont('helvetica','bold');
+          doc.text(`Observation #${idx}:`,20,y); y+=6;
+          doc.setFont('helvetica','normal');
+          txt.forEach(line=>{ doc.text(line,20,y); y+=6; });
+          y+=4;
+          // photos two per row
+          for(let j=0;j<photos.length;j+=2){
+            if(y+imgSize>280){ doc.addPage(); y=20; }
+            doc.addImage(photos[j],'JPEG',20,y,imgSize,imgSize,undefined,'SLOW');
+            if(photos[j+1]) doc.addImage(photos[j+1],'JPEG',20+imgSize+5,y,imgSize,imgSize,undefined,'SLOW');
+            y+=imgSize+5;
+          }
+        });
+
+        // save & upload
         const blob = doc.output('blob');
         const filename = `Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
         doc.save(filename);
-
         const storageRef = storage.ref(`reports/${loadedReportId}/${filename}`);
-        await storageRef.put(blob, { contentType: 'application/pdf' });
+        await storageRef.put(blob,{contentType:'application/pdf'});
         const pdfUrl = await storageRef.getDownloadURL();
-
         await ref.set({
-          address,
-          inspector,
-          roofType,
-          roofCondition,
-          date,
+          address,inspector,roofType,roofCondition,date,
           observations: savedObs,
-          pdfUrl,
-          updatedAt: Date.now()
+          pdfUrl,updatedAt:Date.now()
         });
-
         alert('Report saved, PDF generated & uploaded!');
         loadReports();
-
-      } catch (err) {
+      } catch(err){
         console.error(err);
-        alert('Error: ' + err.message);
+        alert('Error: '+err.message);
       }
     }
   </script>
