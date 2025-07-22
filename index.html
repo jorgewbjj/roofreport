@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,11 +139,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-  <!-- Leaflet for maps -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- html2canvas for map snapshots -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="form-group">
@@ -169,9 +165,8 @@
 
   <div class="top-details">
     <div class="form-group">
-      <label>Property Address:</label>
-      <input type="text" id="address" required placeholder="Enter full address">
-      <div id="default-map" style="height:200px; margin-top:10px;"></div>
+      <label>Property:</label>
+      <input type="text" id="address" required>
     </div>
     <div class="form-group">
       <label>Inspector Name:</label>
@@ -236,9 +231,6 @@
     const storage = firebase.storage();
     let loadedReportId = "";
 
-    // ==== global map state ====
-    let defaultMap, defaultCenter = [0,0];
-
     // ==== DOM refs ====
     const reportList      = document.getElementById('reportList');
     const pastReportsBody = document.querySelector('#reportsTable tbody');
@@ -255,53 +247,13 @@
     window.addEventListener('DOMContentLoaded', () => {
       setDefaultDate();
       loadReports();
-      initDefaultMap();
       addObservation();
-      // Re-center default map when address changes
-      document.getElementById('address').addEventListener('change', async () => {
-        const ctr = await geocodeAddress();
-        defaultMap.setView(ctr, 15);
-        defaultCenter = ctr;
-        // update existing observation maps
-        document.querySelectorAll('.obs-map').forEach(div => {
-          const map = div._leaflet_map;
-          if (map) map.setView(ctr, 15);
-        });
-      });
     });
 
-    // ==== Date helper ====
     function setDefaultDate() {
       const d = new Date();
       document.getElementById('date').value =
         `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-
-    // ==== Default map for property ====
-    function initDefaultMap() {
-      defaultMap = L.map('default-map').setView([0,0], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution:'&copy; OpenStreetMap contributors'
-      }).addTo(defaultMap);
-      // initial geocode
-      geocodeAddress().then(ctr => {
-        defaultMap.setView(ctr, 15);
-        defaultCenter = ctr;
-      });
-    }
-
-    async function geocodeAddress() {
-      const addr = document.getElementById('address').value.trim();
-      if (!addr) return defaultCenter;
-      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`;
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data[0]) {
-          return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        }
-      } catch {}
-      return defaultCenter;
     }
 
     // ==== past reports ====
@@ -342,24 +294,12 @@
       document.getElementById('date').value          = d.date;
       obsContainer.innerHTML = '';
       observationCount = 0;
-      // recenter default map
-      const ctr = [d.latitude, d.longitude];
-      defaultMap.setView(ctr, 15);
-      defaultCenter = ctr;
       d.observations.forEach(obs => {
         addObservation();
         const sec = obsContainer.children[observationCount-1];
         sec.querySelector('.observation-desc').value = obs.desc;
         sec.photosDataUrls = obs.photos.slice();
-        sec.markerCoords = obs.coords;
         updatePreview(sec);
-        // add marker on obs map
-        const mapDiv = document.getElementById(`map-${observationCount}`);
-        const map = mapDiv._leaflet_map;
-        if (map && obs.coords) {
-          L.marker(obs.coords).addTo(map);
-          map.setView(obs.coords, 15);
-        }
       });
     }
 
@@ -374,8 +314,6 @@
       obsContainer.innerHTML = '';
       observationCount = 0;
       addObservation();
-      // reset default map
-      defaultMap.setView([0,0],2);
     }
 
     // ==== Observations & cropping ====
@@ -384,10 +322,8 @@
       const div = document.createElement('div');
       div.className = 'form-group observation-section';
       div.innerHTML = `
-        <label>Observation #${observationCount+1}:</label>
+        <label>Observation:</label>
         <textarea class="observation-desc" required></textarea>
-        <label>Map - click to place marker:</label>
-        <div class="obs-map" id="map-${observationCount+1}" style="height:200px;"></div>
         <label>Upload Photos:</label>
         <input type="file" class="observation-photos" multiple accept="image/*">
         <div class="button-group">
@@ -396,14 +332,10 @@
       `;
       obsContainer.appendChild(div);
       observationCount++;
-      // remove logic
       div.querySelector('.remove-btn').onclick = () => {
         if (observationCount>1) { div.remove(); observationCount--; }
         else alert('At least one observation is required');
       };
-      // init map for this obs
-      initObsMap(`map-${observationCount}`);
-      // photo upload
       const input = div.querySelector('.observation-photos');
       input.onchange = e => {
         const files = Array.from(e.target.files);
@@ -412,23 +344,6 @@
         e.target.value = '';
         processNextCrop(div);
       };
-    }
-
-    function initObsMap(id) {
-      const map = L.map(id).setView(defaultCenter, 15);
-      // store reference
-      const div = document.getElementById(id);
-      div._leaflet_map = map;
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: ''
-      }).addTo(map);
-      let marker;
-      map.on('click', e => {
-        if (marker) map.removeLayer(marker);
-        marker = L.marker(e.latlng).addTo(map);
-        // store chosen coords
-        div.markerCoords = e.latlng;
-      });
     }
 
     function processNextCrop(sec) {
@@ -452,8 +367,7 @@
     cropConfirm.onclick = () => {
       const cv = cropper.getCroppedCanvas();
       const ctx = cv.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high';
       const url = cv.toDataURL('image/jpeg',1.0);
       currentSection.photosDataUrls.push(url);
       closeModal(); processNextCrop(currentSection);
@@ -486,9 +400,6 @@
         const roofCondition = document.getElementById('roof-condition').value;
         const date          = document.getElementById('date').value;
 
-        // Save lat/lon on top-level
-        const [lat, lon] = defaultCenter;
-
         let ref;
         if(loadedReportId) ref = db.ref(`reports/${loadedReportId}`);
         else {
@@ -503,7 +414,6 @@
 
         const doc = new jsPDF({ compress: true });
         const w   = doc.internal.pageSize.getWidth();
-        const h   = doc.internal.pageSize.getHeight();
         let y     = 20;
 
         // logo
@@ -531,7 +441,7 @@
           `Roof Condition: ${roofCondition}`
         ];
         lines.forEach(l=>{
-          if(y>h-20){ doc.addPage(); y=20; }
+          if(y>280){ doc.addPage(); y=20; }
           doc.text(l,20,y); y+=8;
         });
         y+=8;
@@ -541,112 +451,75 @@
         const savedObs=[];
         const imgSize=(w-45)/2;
 
-        // iterate through each obs
-        for(let i=0; i<secs.length; i++){
-          const sec = secs[i];
-          const idx = i+1;
-          const desc = sec.querySelector('.observation-desc').value.trim();
-          const photos = sec.photosDataUrls||[];
-          const coords = sec.markerCoords || null;
-          savedObs.push({desc,photos,coords});
-
-          // write text
-          const txt = doc.splitTextToSize(desc,w-40);
-          const txtH = txt.length*6 + 10;
-          const imgsH = Math.ceil(photos.length/2)*(imgSize+5);
-          const mapH = coords ? 60 : 0;
-          if(y + txtH + mapH + imgsH > h-20){
+        // FIRST OBS on page1:
+        if(secs.length>0){
+          const sec0=secs.shift();
+          const desc0=sec0.querySelector('.observation-desc').value.trim();
+          const photos0=sec0.photosDataUrls||[];
+          savedObs.push({desc:desc0,photos:photos0});
+          const txt0=doc.splitTextToSize(desc0,w-40);
+          const txtH0=txt0.length*6+10;
+          if(y+txtH0>280){ doc.addPage(); y=20; }
+          doc.setFont('helvetica','bold');
+          doc.text('Observation #1:',20,y); y+=6;
+          doc.setFont('helvetica','normal');
+          txt0.forEach(line=>{ doc.text(line,20,y); y+=6; });
+          y+=4;
+          // first two pics on page1
+          const firstTwo=photos0.slice(0,2);
+          firstTwo.forEach((p,i)=>{
+            const x=20+i*(imgSize+5);
+            doc.addImage(p,'JPEG',x,y,imgSize,imgSize,undefined,'SLOW');
+          });
+          y+=imgSize+5;
+          // extras on subsequent pages
+          if(photos0.length>2){
             doc.addPage(); y=20;
+            const extra=photos0.slice(2);
+            for(let k=0;k<extra.length;k+=2){
+              if(y+imgSize>280){ doc.addPage(); y=20; }
+              doc.addImage(extra[k],'JPEG',20,y,imgSize,imgSize,undefined,'SLOW');
+              if(extra[k+1]){
+                doc.addImage(extra[k+1],'JPEG',20+imgSize+5,y,imgSize,imgSize,undefined,'SLOW');
+              }
+              y+=imgSize+5;
+            }
           }
+        }
+
+        // remaining obs:
+        secs.forEach((sec,i)=>{
+          const idx=i+2;
+          const desc=sec.querySelector('.observation-desc').value.trim();
+          const photos=sec.photosDataUrls||[];
+          savedObs.push({desc,photos});
+          const txt=doc.splitTextToSize(desc,w-40);
+          const txtH=txt.length*6+10;
+          const imgsH=Math.ceil(photos.length/2)*(imgSize+5);
+          if(y+txtH+imgsH>280){ doc.addPage(); y=20; }
           doc.setFont('helvetica','bold');
           doc.text(`Observation #${idx}:`,20,y); y+=6;
           doc.setFont('helvetica','normal');
           txt.forEach(line=>{ doc.text(line,20,y); y+=6; });
           y+=4;
-
-          // embed map snapshot
-          if(coords){
-            const mapDiv = document.getElementById(`map-${idx}`);
-            const canvas = await html2canvas(mapDiv);
-            const imgData = canvas.toDataURL('image/png');
-            doc.addImage(imgData,'PNG',20,y,w-40, mapH);
-            y += mapH + 5;
-          }
-
-          // embed photos
           for(let j=0;j<photos.length;j+=2){
-            if(y+imgSize>h-20){ doc.addPage(); y=20; }
+            if(y+imgSize>280){ doc.addPage(); y=20; }
             doc.addImage(photos[j],'JPEG',20,y,imgSize,imgSize,undefined,'SLOW');
             if(photos[j+1]){
               doc.addImage(photos[j+1],'JPEG',20+imgSize+5,y,imgSize,imgSize,undefined,'SLOW');
             }
             y+=imgSize+5;
           }
-          y+=5;
-        }
-
-        // overview map page
-        const overviewDiv = document.createElement('div');
-        overviewDiv.id = 'overview-map';
-        overviewDiv.style.width = '600px';
-        overviewDiv.style.height = '400px';
-        overviewDiv.style.position = 'absolute';
-        overviewDiv.style.top = '-5000px';
-        document.body.appendChild(overviewDiv);
-
-        const overviewMap = L.map('overview-map').setView(defaultCenter, 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: ''
-        }).addTo(overviewMap);
-
-        const group = L.featureGroup();
-        savedObs.forEach((o,k) => {
-          if(o.coords){
-            const marker = L.marker(o.coords, {
-              icon: L.divIcon({
-                html: `<div style="
-                  background-color:#3388ff;
-                  color:#fff;
-                  border-radius:50%;
-                  width:24px;
-                  height:24px;
-                  line-height:24px;
-                  text-align:center;
-                  ">${k+1}</div>`,
-                iconSize:[24,24]
-              })
-            }).addTo(overviewMap);
-            group.addLayer(marker);
-          }
         });
-        if(group.getLayers().length) overviewMap.fitBounds(group.getBounds().pad(0.5));
 
-        const ovCanvas = await html2canvas(overviewDiv);
-        document.body.removeChild(overviewDiv);
-
-        doc.addPage();
-        let y2 = 20;
-        doc.setFontSize(16);
-        doc.text('Overview Map',w/2,y2,{align:'center'});
-        y2 += 15;
-        doc.addImage(ovCanvas.toDataURL('image/png'),'PNG',20,y2,w-40,h - y2 - 20);
-
-        // save PDF locally & upload
-        const blob = doc.output('blob');
-        const filename = `Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
+        // save & upload
+        const blob=doc.output('blob');
+        const filename=`Inspection_Report_${address.replace(/[^a-zA-Z0-9]/g,'_').slice(0,50)}_${date}.pdf`;
         doc.save(filename);
-        const storageRef = storage.ref(`reports/${loadedReportId}/${filename}`);
+        const storageRef=storage.ref(`reports/${loadedReportId}/${filename}`);
         await storageRef.put(blob,{contentType:'application/pdf'});
-        const pdfUrl = await storageRef.getDownloadURL();
-
-        // persist report data
-        await ref.set({
-          address, latitude: lat, longitude: lon,
-          inspector, roofType, roofCondition, date,
-          observations: savedObs,
-          pdfUrl, updatedAt: Date.now()
-        });
-
+        const pdfUrl=await storageRef.getDownloadURL();
+        await ref.set({address,inspector,roofType,roofCondition,date,observations:savedObs,pdfUrl,updatedAt:Date.now()});
         alert('Report saved, PDF generated & uploaded!');
         loadReports();
 
